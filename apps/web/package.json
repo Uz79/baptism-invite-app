@@ -10,8 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@cartography-lab/tokens": "file:../../../cartography-lab-app/packages/tokens",
-    "@cartography-lab/ui": "file:../../../cartography-lab-app/packages/ui",
+    "@cartography-lab/tokens": "0.5.0",
+    "@cartography-lab/ui": "0.5.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0"

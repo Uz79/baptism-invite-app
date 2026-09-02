@@ -2,7 +2,7 @@ import path from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-const cartographyRoot = path.resolve(__dirname, "../../../cartography-lab-app");
+const repoRoot = path.resolve(__dirname, "../..");
 
 export default defineConfig({
   plugins: [react()],
@@ -10,15 +10,15 @@ export default defineConfig({
     alias: [
       {
         find: "@cartography-lab/ui/styles.css",
-        replacement: path.resolve(cartographyRoot, "packages/ui/src/styles/ui.css"),
+        replacement: path.resolve(repoRoot, "packages/ui/src/styles/ui.css"),
       },
       {
         find: "@cartography-lab/tokens",
-        replacement: path.resolve(cartographyRoot, "packages/tokens/dist/index.css"),
+        replacement: path.resolve(repoRoot, "packages/tokens/dist/index.css"),
       },
       {
         find: "@cartography-lab/ui",
-        replacement: path.resolve(cartographyRoot, "packages/ui/src/index.ts"),
+        replacement: path.resolve(repoRoot, "packages/ui/src/index.ts"),
       },
     ],
   },
@@ -27,7 +27,7 @@ export default defineConfig({
     port: 5177,
     strictPort: true,
     open: "/",
-    fs: { allow: [cartographyRoot, path.resolve(__dirname, "../..")] },
+    fs: { allow: [repoRoot] },
   },
   preview: {
     host: "localhost",

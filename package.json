@@ -4,15 +4,16 @@
   "version": "0.1.0",
   "description": "Baptism invitation web app — built on @cartography-lab/* design system",
   "workspaces": [
+    "packages/*",
     "apps/*"
   ],
   "scripts": {
-    "tokens:build": "npm run tokens:build --prefix ../cartography-lab-app",
+    "tokens:build": "node scripts/build-tokens.mjs",
     "dev": "node scripts/dev.mjs",
     "start": "npm run dev",
     "build": "npm run tokens:build && npm run build -w baptism-invite-web",
     "preview": "npm run preview -w baptism-invite-web",
-    "typecheck": "npm run typecheck -w baptism-invite-web"
+    "typecheck": "npm run typecheck -w baptism-invite-web && npm run typecheck -w @cartography-lab/ui"
   },
   "engines": {
     "node": ">=20"
