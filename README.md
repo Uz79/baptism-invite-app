@@ -27,9 +27,11 @@ Dev server: http://localhost:5177/
 
 ## Vercel
 
-Set the **Root Directory** to the repository root (not `apps/web`).
+**Important:** When redeploying, pick the latest commit on `main` (`Fix Vercel build: generate token CSS before Vite build.`) — do not “Redeploy” an older failed deployment.
 
-Vercel uses `vercel.json`:
+If the Vercel project uses **Root Directory = `apps/web`** (common for `baptism-invite-app-web`), `apps/web/vercel.json` runs `npm install` from the monorepo root so workspace packages link correctly.
+
+If **Root Directory** is the repo root, the root `vercel.json` applies instead:
 
 - `installCommand`: `npm install` (workspace root — links `packages/*`)
 - `buildCommand`: `npm run build` (tokens + web app)
