@@ -1,0 +1,22 @@
+[
+  {
+    "id": "light-desktop",
+    "name": "Light / Desktop",
+    "selectedTokenSets": {}
+  },
+  {
+    "id": "light-mobile",
+    "name": "Light / Mobile",
+    "selectedTokenSets": {}
+  },
+  {
+    "id": "dark-desktop",
+    "name": "Dark / Desktop",
+    "selectedTokenSets": {}
+  },
+  {
+    "id": "dark-mobile",
+    "name": "Dark / Mobile",
+    "selectedTokenSets": {}
+  }
+]

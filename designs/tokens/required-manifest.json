@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "description": "Engineering tokens required by apps/web/scripts/generate-tokens-css.mjs. Figma exports may omit these; tokens:validate checks them before promote.",
+  "requiredFiles": [
+    "brand.json",
+    "alias.json",
+    "mapped/light.json",
+    "mapped/dark.json",
+    "responsive/mobile.json",
+    "responsive/desktop.json"
+  ],
+  "optionalFiles": [
+    {
+      "name": "metadata.json",
+      "altNames": ["$metadata.json"]
+    },
+    {
+      "name": "themes.json",
+      "altNames": ["$themes.json"]
+    }
+  ],
+  "brand": [
+    {
+      "path": "font-metrics.profile-pro.units-per-em",
+      "reason": "Leading trim: units-per-em for Profile Pro"
+    },
+    {
+      "path": "font-metrics.profile-pro.cap-height",
+      "reason": "Leading trim: cap height for Profile Pro"
+    },
+    {
+      "path": "font-metrics.profile-pro.typo-ascender",
+      "reason": "Leading trim: ascender for Profile Pro"
+    },
+    {
+      "path": "font-metrics.profile-pro.typo-descender",
+      "reason": "Leading trim: descender for Profile Pro"
+    }
+  ],
+  "alias": [
+    {
+      "path": "color.primary.1000-20pc",
+      "reason": "Light mode secondary button pressed state (50–1200 scale: primary hangs on 1000)"
+    },
+    {
+      "path": "color.neutral.white-20pc",
+      "reason": "Dark mode secondary button pressed state"
+    }
+  ],
+  "generatorRefs": [
+    {
+      "ref": "{color.primary.1000-20pc}",
+      "reason": "themeBlock: --color-btn-secondary-pressed (light)"
+    },
+    {
+      "ref": "{color.neutral.white-20pc}",
+      "reason": "themeBlock: --color-btn-secondary-pressed (dark)"
+    },
+    {
+      "ref": "{color.neutral.white-10pc}",
+      "reason": "themeBlock: nav item active + show-all backgrounds (dark)"
+    },
+    {
+      "ref": "{color.neutral.white}",
+      "reason": "themeBlock: icon circle fill (dark)"
+    }
+  ],
+  "engineeringDefaults": {
+    "leadingTrim": "Default true when Figma omits typography.leadingTrim — required for cap-height trim stacks.",
+    "textRowGap": "Fixed 0.5rem (8dp) — do not alias to space/N; space scale shifts break product-item and position stacks."
+  }
+}

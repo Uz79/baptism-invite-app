@@ -4,7 +4,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const cartographyRoot = path.resolve(root, "../cartography-lab-app");
 const webRoot = path.join(root, "apps/web");
 const devUrl = "http://localhost:5177/";
 
@@ -30,11 +29,10 @@ if (!existsSync(path.join(root, "node_modules"))) {
   );
 }
 
-if (!existsSync(cartographyRoot)) {
+if (!existsSync(path.join(root, "packages/ui/src/index.ts"))) {
   fail(
-    "Cartography design system not found at:\n" +
-      `  ${cartographyRoot}\n` +
-      "Expected: ~/Documents/GitHub/cartography-lab-app"
+    "Design system packages missing. Expected:\n" +
+      `  ${path.join(root, "packages/ui")}`
   );
 }
 
