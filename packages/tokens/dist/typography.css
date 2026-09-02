@@ -1,0 +1,175 @@
+/* AUTO-GENERATED — do not edit.
+ * Source: designs/tokens/* → scripts/generate-tokens-css.mjs
+ * Regenerate: npm run tokens:build (from repo root)
+ */
+
+/* Bundled semantic text styles */
+
+.type-hero {
+  font-family: var(--font-family);
+  font-size: var(--fs-hero);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-hero);
+  --text-trim-top: var(--trim-top-hero);
+  --text-trim-bottom: var(--trim-bottom-hero);
+}
+
+.type-h1 {
+  font-family: var(--font-family);
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-h1);
+  --text-trim-top: var(--trim-top-h1);
+  --text-trim-bottom: var(--trim-bottom-h1);
+}
+
+.type-h2 {
+  font-family: var(--font-family);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-h2);
+  --text-trim-top: var(--trim-top-h2);
+  --text-trim-bottom: var(--trim-bottom-h2);
+}
+
+.type-h3 {
+  font-family: var(--font-family);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-h3);
+  --text-trim-top: var(--trim-top-h3);
+  --text-trim-bottom: var(--trim-bottom-h3);
+}
+
+.type-h4 {
+  font-family: var(--font-family);
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-h4);
+  --text-trim-top: var(--trim-top-h4);
+  --text-trim-bottom: var(--trim-bottom-h4);
+}
+
+.type-h5 {
+  font-family: var(--font-family);
+  font-size: var(--fs-h5);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-h5);
+  --text-trim-top: var(--trim-top-h5);
+  --text-trim-bottom: var(--trim-bottom-h5);
+}
+
+.type-h6 {
+  font-family: var(--font-family);
+  font-size: var(--fs-h6);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-h6);
+  --text-trim-top: var(--trim-top-h6);
+  --text-trim-bottom: var(--trim-bottom-h6);
+}
+
+.type-lg {
+  font-family: var(--font-family);
+  font-size: var(--fs-text-lg);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-text);
+  --text-trim-top: var(--trim-top-text-lg);
+  --text-trim-bottom: var(--trim-bottom-text-lg);
+}
+
+.type-md {
+  font-family: var(--font-family);
+  font-size: var(--fs-text-md);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-text);
+  --text-trim-top: var(--trim-top-text-md);
+  --text-trim-bottom: var(--trim-bottom-text-md);
+}
+
+.type-sm {
+  font-family: var(--font-family);
+  font-size: var(--fs-text-sm);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-text);
+  --text-trim-top: var(--trim-top-text-sm);
+  --text-trim-bottom: var(--trim-bottom-text-sm);
+}
+
+.type-xs {
+  font-family: var(--font-family);
+  font-size: var(--fs-text-xs);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-text);
+  --text-trim-top: var(--trim-top-text-xs);
+  --text-trim-bottom: var(--trim-bottom-text-xs);
+}
+
+.type-caption {
+  font-family: var(--font-family);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-caption);
+  --text-trim-top: var(--trim-top-caption);
+  --text-trim-bottom: var(--trim-bottom-caption);
+}
+
+.type-medium {
+  font-weight: var(--fw-medium);
+}
+
+.type-bold {
+  font-weight: var(--fw-bold);
+}
+
+/* Leading trim — apply with .type-trim on styles where leadingTrim is true in tokens */
+.type-trim {
+  display: block;
+  margin-block-start: calc(-1 * var(--text-trim-top, 0px));
+  margin-block-end: calc(-1 * var(--text-trim-bottom, 0px));
+}
+
+
+.type-hero.type-trim,
+.type-h1.type-trim,
+.type-h2.type-trim,
+.type-h3.type-trim,
+.type-h4.type-trim,
+.type-h5.type-trim,
+.type-h6.type-trim,
+.type-lg.type-trim,
+.type-md.type-trim,
+.type-sm.type-trim,
+.type-xs.type-trim,
+.type-caption.type-trim {
+  display: block;
+  margin-block-start: calc(-1 * var(--text-trim-top));
+  margin-block-end: calc(-1 * var(--text-trim-bottom));
+}
+
+/* Stacked trimmed lines — .type-stack-tight + .type-trim; row gap via trim-aware margins */
+.type-stack-tight {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.type-stack-tight > .type-sm.type-trim:first-child {
+  margin-block-end: 0;
+}
+
+.type-stack-tight > .type-sm.type-trim + .type-xs.type-trim {
+  margin-block-start: calc(
+    var(--text-row-gap) - var(--trim-bottom-text-sm) - var(--trim-top-text-xs)
+  );
+}
+
+/* Horizontal amount pairs — never block-level trim margins */
+.list-item__amount .type-trim,
+.list-item__currency.type-trim,
+.list-item__value.type-trim,
+.list-item--group-account .list-item__end .type-trim {
+  display: inline;
+  margin-block: 0;
+}
+
+/* Margin-based trim only — text-box-trim caused inconsistent stack/row layout in modals and carousels. */

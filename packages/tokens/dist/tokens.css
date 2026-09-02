@@ -1,0 +1,191 @@
+/* AUTO-GENERATED — do not edit.
+ * Source: designs/tokens/* → scripts/generate-tokens-css.mjs
+ * Regenerate: npm run tokens:build (from repo root)
+ */
+
+@font-face {
+  font-family: 'Profile Pro';
+  src: url('../fonts/ProfilePro-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Profile Pro';
+  src: url('../fonts/ProfilePro-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Profile Pro';
+  src: url('../fonts/ProfilePro-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Generated from designs/tokens/* — theme: <html data-theme="light|dark"> */
+:root {
+  --space-1: 0.5rem;
+  --space-2: 0.75rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2rem;
+  --space-6: 3rem;
+  --space-7: 4rem;
+  --space-8: 5rem;
+  --space-9: 6rem;
+  --space-10: 7rem;
+  --space-11: 8rem;
+  --space-12: 9rem;
+
+  --radius-small: 0.25rem;
+  --radius-regular: 0.5rem;
+  --radius-pill: 16rem;
+
+  --font-family: 'Profile Pro', sans-serif;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-bold: 700;
+
+  --fs-hero: 4rem;
+  --fs-h1: 3.5rem;
+  --fs-h2: 3rem;
+  --fs-h3: 2.5rem;
+  --fs-h4: 2rem;
+  --fs-h5: 1.75rem;
+  --fs-h6: 1.5rem;
+  --fs-text-lg: 1.125rem;
+  --fs-text-md: 1rem;
+  --fs-text-sm: 0.875rem;
+  --fs-text-xs: 0.75rem;
+  --fs-caption: 0.75rem;
+
+  --lh-hero: 1;
+  --lh-h1: 1;
+  --lh-h2: 1;
+  --lh-h3: 1.1;
+  --lh-h4: 1.15;
+  --lh-h5: 1.2;
+  --lh-h6: 1.25;
+  --lh-text: 1.5;
+  --lh-caption: 1.4;
+
+  /* Leading trim — Profile Pro cap → baseline (computed from brand font-metrics) */
+  --trim-top-hero: 11.712px;
+  --trim-bottom-hero: 13.76px;
+  --ps-hero: 2rem;
+  --trim-top-h1: 10.248px;
+  --trim-bottom-h1: 12.04px;
+  --ps-h1: 1.75rem;
+  --trim-top-h2: 8.784px;
+  --trim-bottom-h2: 10.32px;
+  --ps-h2: 1.5rem;
+  --trim-top-h3: 9.32px;
+  --trim-bottom-h3: 10.6px;
+  --ps-h3: 1.25rem;
+  --trim-top-h4: 8.256px;
+  --trim-bottom-h4: 9.28px;
+  --ps-h4: 1rem;
+  --trim-top-h5: 7.924px;
+  --trim-bottom-h5: 8.82px;
+  --ps-h5: 0.875rem;
+  --trim-top-h6: 7.392px;
+  --trim-bottom-h6: 8.16px;
+  --ps-h6: 0.75rem;
+  --trim-top-text-lg: 7.794px;
+  --trim-bottom-text-lg: 8.37px;
+  --ps-text-lg: 1.125rem;
+  --trim-top-text-md: 6.928px;
+  --trim-bottom-text-md: 7.44px;
+  --ps-text-md: 1rem;
+  --trim-top-text-sm: 6.062px;
+  --trim-bottom-text-sm: 6.51px;
+  --ps-text-sm: 0.875rem;
+  --trim-top-text-xs: 5.196px;
+  --trim-bottom-text-xs: 5.58px;
+  --ps-text-xs: 0.75rem;
+  --trim-top-caption: 4.596px;
+  --trim-bottom-caption: 4.98px;
+  --ps-caption: 0.5rem;
+
+  /* Tight row gap for stacked trimmed labels — fixed 8dp (immune to space-scale shifts) */
+  --text-row-gap: 0.5rem;
+
+  --btn-pad-y-sm: 0;
+  --btn-pad-x-sm: var(--space-2);
+  --btn-pad-y-md: var(--space-2);
+  --btn-pad-x-md: var(--space-3);
+  --btn-pad-y-lg: var(--space-4);
+  --btn-pad-x-lg: var(--space-5);
+  --btn-height-sm: 2rem;
+
+  --input-stroke-px: 1px;
+  --input-stroke-focus-px: 2px;
+  --input-stroke-width: 1px;
+}
+
+/* Theme colors live in colors.css (v4 mapped) + compat.css — not emitted here. */
+
+@media (min-width: 1280px) {
+  :root {
+  --fs-hero: 7rem;
+  --fs-h1: 6rem;
+  --fs-h2: 5rem;
+  --fs-h3: 4rem;
+  --fs-h4: 3rem;
+  --fs-h5: 2.5rem;
+  --fs-h6: 2rem;
+  --fs-text-lg: 1.25rem;
+
+    --lh-hero: 1;
+    --lh-h1: 1;
+    --lh-h2: 1;
+    --lh-h3: 1.1;
+    --lh-h4: 1.15;
+    --lh-h5: 1.2;
+    --lh-h6: 1.25;
+    --lh-text: 1.5;
+    --lh-caption: 1.4;
+
+  --trim-top-hero: 20.496px;
+  --trim-bottom-hero: 24.08px;
+  --ps-hero: 3rem;
+  --trim-top-h1: 17.568px;
+  --trim-bottom-h1: 20.64px;
+  --ps-h1: 2.5rem;
+  --trim-top-h2: 14.64px;
+  --trim-bottom-h2: 17.2px;
+  --ps-h2: 2rem;
+  --trim-top-h3: 14.912px;
+  --trim-bottom-h3: 16.96px;
+  --ps-h3: 1.75rem;
+  --trim-top-h4: 12.384px;
+  --trim-bottom-h4: 13.92px;
+  --ps-h4: 1.5rem;
+  --trim-top-h5: 11.32px;
+  --trim-bottom-h5: 12.6px;
+  --ps-h5: 1.25rem;
+  --trim-top-h6: 9.856px;
+  --trim-bottom-h6: 10.88px;
+  --ps-h6: 1rem;
+  --trim-top-text-lg: 8.66px;
+  --trim-bottom-text-lg: 9.3px;
+  --ps-text-lg: 1.25rem;
+  --trim-top-text-md: 6.928px;
+  --trim-bottom-text-md: 7.44px;
+  --ps-text-md: 1rem;
+  --trim-top-text-sm: 6.062px;
+  --trim-bottom-text-sm: 6.51px;
+  --ps-text-sm: 0.875rem;
+  --trim-top-text-xs: 5.196px;
+  --trim-bottom-text-xs: 5.58px;
+  --ps-text-xs: 0.75rem;
+  --trim-top-caption: 4.596px;
+  --trim-bottom-caption: 4.98px;
+  --ps-caption: 0.5rem;
+  }
+}
