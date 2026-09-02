@@ -1,0 +1,20 @@
+{
+  "name": "theme-setting",
+  "category": "screen",
+  "description": "Mobile theme settings sheet — light/dark shell, neutral contrast, monochrome/multicolor, live preview, confirm.",
+  "figma": {
+    "file": "Des-Sys-Test",
+    "nodeId": "1122-56102",
+    "url": "https://www.figma.com/design/IKZcKBuZfweNRvRI0Ji6X3/Des-Sys-Test?node-id=1122-56102"
+  },
+  "assets": {
+    "variants": {
+      "monochrome": {
+        "mobile-default": {
+          "default": "variants/monochrome/mobile-default/default.svg",
+          "png": "variants/monochrome/mobile-default/default.png"
+        }
+      }
+    }
+  }
+}

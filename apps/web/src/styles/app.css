@@ -1,0 +1,203 @@
+/* Baptism invite — layout aligned to designs/screens/baptism-invite */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--background-background);
+  color: var(--foreground-foreground);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+}
+
+:root {
+  --app-column-max-width: 23.4375rem;
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --app-column-max-width: 28rem;
+  }
+}
+
+.invite-app {
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.app-chrome {
+  width: 100%;
+  max-width: var(--app-column-max-width);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-chrome__bar {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr 2.5rem;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  flex-shrink: 0;
+}
+
+.app-chrome__menu-btn {
+  justify-self: start;
+}
+
+.app-chrome__title {
+  margin: 0;
+  text-align: center;
+  color: var(--foreground-foreground);
+}
+
+.app-chrome__bar-spacer {
+  width: 2.5rem;
+}
+
+.app-chrome__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.invite-page {
+  width: 100%;
+  padding: var(--space-5) var(--space-3) var(--space-8);
+  /* Figma mobile frame: Text Large = 20px / 140% (not 18px mobile token default) */
+  --fs-text-lg: 1.25rem;
+  --ps-text-lg: 1.25rem;
+}
+
+.invite-hero {
+  text-align: center;
+  margin-bottom: var(--space-7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ps-text-lg);
+}
+
+.invite-hero__title,
+.invite-hero__date,
+.invite-hero__name {
+  margin: 0;
+  width: 100%;
+}
+
+/* Uniform paragraph spacing between trimmed hero lines */
+.invite-hero > .type-trim {
+  margin-block: 0;
+}
+
+.invite-hero__title {
+  color: var(--foreground-foreground);
+}
+
+.invite-hero__date,
+.invite-hero__name {
+  color: var(--foreground-foreground);
+  line-height: 1.4;
+}
+
+.invite-schedule__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+}
+
+.schedule-event {
+  display: grid;
+  grid-template-columns: minmax(3.25rem, max-content) 1fr;
+  column-gap: var(--space-4);
+  row-gap: 0;
+  align-items: baseline;
+}
+
+.schedule-event__time {
+  margin: 0;
+  grid-column: 1;
+  grid-row: 1;
+  line-height: 1.4;
+  color: var(--foreground-foreground);
+}
+
+.schedule-event__time.type-trim {
+  margin-block: 0;
+}
+
+.schedule-event__body {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ps-text-lg);
+  min-width: 0;
+}
+
+.schedule-event__body > .type-trim {
+  margin-block: 0;
+}
+
+.schedule-event__title {
+  margin: 0;
+  line-height: 1.4;
+  color: var(--foreground-foreground);
+}
+
+.schedule-event__subtitle,
+.schedule-event__notes {
+  margin: 0;
+}
+
+.schedule-event__subtitle {
+  color: color-mix(in srgb, var(--foreground-foreground) 70%, transparent);
+}
+
+.schedule-event__notes {
+  margin: 0;
+  padding-left: 1.125rem;
+  list-style: disc outside;
+  color: color-mix(in srgb, var(--foreground-foreground) 70%, transparent);
+}
+
+.schedule-event__notes li + li {
+  margin-top: 0.25rem;
+}
+
+.schedule-event__notes li {
+  padding-left: 0.125rem;
+}
+
+.schedule-event__action {
+  grid-column: 1 / -1;
+  margin-top: var(--space-5);
+}
+
+.map-link-button {
+  width: 100%;
+  max-width: none;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.map-link-button__label {
+  flex: 0 1 auto;
+}
+
+@media (min-width: 48rem) {
+  .invite-page {
+    padding-top: var(--space-6);
+  }
+}
