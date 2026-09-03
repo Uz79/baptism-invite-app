@@ -11,6 +11,8 @@ interface ThemeFlowOverlayProps {
   onClose: () => void;
   onConfirm?: () => void;
   confirmLabel?: string;
+  confirmDisabled?: boolean;
+  showShellToggle?: boolean;
   children: ReactNode;
 }
 
@@ -33,6 +35,8 @@ export function ThemeFlowOverlay({
   onClose,
   onConfirm,
   confirmLabel = "Confirm",
+  confirmDisabled = false,
+  showShellToggle = true,
   children,
 }: ThemeFlowOverlayProps) {
   const titleId = useId();
@@ -142,6 +146,7 @@ export function ThemeFlowOverlay({
   }, [open, onClose]);
 
   const handleConfirm = () => {
+    if (confirmDisabled) return;
     onConfirm?.();
     onClose();
   };
@@ -187,7 +192,7 @@ export function ThemeFlowOverlay({
               </svg>
             </button>
           </header>
-          {theme && onThemeChange ? (
+          {showShellToggle && theme && onThemeChange ? (
             <div className="modal__shell-toggle-row">
               <SegmentedControl
                 size="sm"
@@ -212,6 +217,7 @@ export function ThemeFlowOverlay({
               size="md"
               className="uz-btn--block"
               type="button"
+              disabled={confirmDisabled}
               onClick={handleConfirm}
             >
               {confirmLabel}

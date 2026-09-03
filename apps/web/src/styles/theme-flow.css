@@ -1461,3 +1461,79 @@ body.body--theme-flow-open {
     font-size: 1.5rem;
   }
 }
+
+.cc-saved__error {
+  margin: 0;
+  font-size: var(--fs-text-sm);
+  line-height: var(--lh-text);
+  color: #b42318;
+}
+
+.cc-theme-card__check {
+  font-size: var(--fs-text-md);
+  font-weight: var(--fw-bold);
+  color: var(--color-fg-interactive);
+}
+
+.guest-theme-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.guest-theme-picker__status {
+  margin: 0;
+  font-size: var(--fs-text-md);
+  color: var(--color-fg-secondary);
+}
+
+.guest-theme-picker__status--error {
+  color: #b42318;
+}
+
+.palette-delete-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--background-background-scrim, #080a1066) 100%, transparent);
+}
+
+.palette-delete-dialog {
+  width: min(100%, 22rem);
+  padding: var(--space-5);
+  border-radius: var(--radius-regular);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  box-shadow: 0 12px 40px color-mix(in srgb, #000 24%, transparent);
+}
+
+.palette-delete-dialog__title {
+  margin: 0;
+  font-size: var(--fs-text-lg);
+  font-weight: var(--fw-medium);
+}
+
+.palette-delete-dialog__body {
+  margin: 0;
+  font-size: var(--fs-text-md);
+  line-height: var(--lh-text);
+  color: var(--color-fg-secondary);
+}
+
+.palette-delete-dialog__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.modal__footer .uz-btn:disabled,
+.modal__footer button:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}

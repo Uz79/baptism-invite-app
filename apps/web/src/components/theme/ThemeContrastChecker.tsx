@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Select, SegmentedControl } from "@cartography-lab/ui";
 import { ThemeSetColorDialog } from "./ThemeSetColorDialog";
+import { DeletePaletteDialog } from "./DeletePaletteDialog";
 import type { Theme } from "../../types/theme";
+import { createPalette, deletePalette, fetchPalettes } from "../../lib/palettesApi";
 import {
   applyDerivedTokens,
   buildMonochromeSequences,
@@ -23,12 +25,10 @@ import {
   pickInvertedInk,
   readCanonicalFromTheme,
   readSavedOverride,
-  readSavedThemes,
   saveOverride,
   settingsFromPair,
   shellThemeFromPair,
   withShellThemeState,
-  writeSavedThemes,
   type PrimaryShellReport,
   type SavedTheme,
   type ThemeKind,
@@ -230,8 +230,11 @@ export function ThemeContrastChecker({
     const base = saved ?? readCanonicalFromTheme(theme);
     return settingsFromPair(base, theme);
   });
-  const [savedThemes, setSavedThemes] = useState<SavedTheme[]>(() => readSavedThemes());
+  const [savedThemes, setSavedThemes] = useState<SavedTheme[]>([]);
   const [dialogTarget, setDialogTarget] = useState<DialogTarget>(null);
+  const [deleteTarget, setDeleteTarget] = useState<SavedTheme | null>(null);
+  const [paletteError, setPaletteError] = useState<string | null>(null);
+  const [paletteBusy, setPaletteBusy] = useState(false);
 
   const syncFromLive = useCallback(() => {
     const saved = readSavedOverride();
@@ -243,12 +246,30 @@ export function ThemeContrastChecker({
       neutralSeed: pair.neutralSeed,
       primarySeed: pair.primarySeed,
     });
-    setSavedThemes(readSavedThemes());
   }, [theme]);
 
   useEffect(() => {
     syncFromLive();
   }, [syncKey, syncFromLive]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchPalettes()
+      .then((list) => {
+        if (!cancelled) setSavedThemes(list);
+      })
+      .catch(() => {
+        if (!cancelled) setPaletteError("Could not load shared palettes.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [syncKey]);
+
+  const visiblePalettes = useMemo(
+    () => savedThemes.filter((t) => (t.kind ?? "multicolor") === settings.kind),
+    [savedThemes, settings.kind]
+  );
 
   const monochromeSeq = useMemo(
     () => buildMonochromeSequences(settings.neutralSeed, theme),
@@ -375,31 +396,46 @@ export function ThemeContrastChecker({
     commitSettings(canonicalThemeSettings(theme), { persist: false, syncShell: false });
   };
 
-  const addTheme = () => {
-    const list = readSavedThemes();
-    const derived = pairFromSettings(settings, theme);
-    const live = readSavedOverride();
-    const themeCard: SavedTheme = {
-      id: makeThemeId(),
-      name: nextThemeName(list),
-      ...derived,
-      ...(live?.contrastByShell ? { contrastByShell: live.contrastByShell } : {}),
-      ...(live?.primaryByShell ? { primaryByShell: live.primaryByShell } : {}),
-      createdAt: Date.now(),
-    };
-    const next = [themeCard, ...list];
-    writeSavedThemes(next);
-    setSavedThemes(next);
+  const addTheme = async () => {
+    setPaletteBusy(true);
+    setPaletteError(null);
+    try {
+      const derived = pairFromSettings(settings, theme);
+      const live = readSavedOverride();
+      const themeCard: SavedTheme = {
+        id: makeThemeId(),
+        name: nextThemeName(savedThemes),
+        ...derived,
+        ...(live?.contrastByShell ? { contrastByShell: live.contrastByShell } : {}),
+        ...(live?.primaryByShell ? { primaryByShell: live.primaryByShell } : {}),
+        createdAt: Date.now(),
+      };
+      const next = await createPalette(themeCard);
+      setSavedThemes(next);
+    } catch (err) {
+      setPaletteError(err instanceof Error ? err.message : "Could not save palette.");
+    } finally {
+      setPaletteBusy(false);
+    }
   };
 
   const applySaved = (t: SavedTheme) => {
     commitSettings(settingsFromPair(t, theme));
   };
 
-  const deleteSaved = (id: string) => {
-    const next = readSavedThemes().filter((t) => t.id !== id);
-    writeSavedThemes(next);
-    setSavedThemes(next);
+  const confirmDeleteSaved = async () => {
+    if (!deleteTarget) return;
+    setPaletteBusy(true);
+    setPaletteError(null);
+    try {
+      const next = await deletePalette(deleteTarget.id);
+      setSavedThemes(next);
+      setDeleteTarget(null);
+    } catch (err) {
+      setPaletteError(err instanceof Error ? err.message : "Could not delete palette.");
+    } finally {
+      setPaletteBusy(false);
+    }
   };
 
   const dialogHex =
@@ -584,23 +620,28 @@ export function ThemeContrastChecker({
       <section className="cc-section cc-section--saved" aria-labelledby="cc-saved-title">
         <header className="cc-saved__header">
           <h3 className="cc-saved__title" id="cc-saved-title">
-            Saved themes
+            Palety
           </h3>
-          <p className="cc-saved__subtitle">Save multiple themes and switch between them.</p>
+          <p className="cc-saved__subtitle">
+            {settings.kind === "monochrome" ? "Jednobarwne" : "Wielobarwne"} — save themes guests can
+            choose from.
+          </p>
+          {paletteError ? <p className="cc-saved__error">{paletteError}</p> : null}
         </header>
-        <div className="cc-saved__grid" role="list" aria-label="Saved themes list">
+        <div className="cc-saved__grid" role="list" aria-label="Saved palettes list">
           <button
             type="button"
             className="cc-theme-card cc-theme-card--add"
             role="listitem"
-            onClick={addTheme}
+            disabled={paletteBusy}
+            onClick={() => void addTheme()}
           >
             <span className="cc-theme-card__plus" aria-hidden>
               <PlusIcon />
             </span>
-            <span className="cc-theme-card__label">Add Theme</span>
+            <span className="cc-theme-card__label">+ Dodaj</span>
           </button>
-          {savedThemes.map((t) => {
+          {visiblePalettes.map((t) => {
             const tSettings = settingsFromPair(t, theme);
             const tPair = pairFromSettings(tSettings, theme);
             const selected =
@@ -632,9 +673,10 @@ export function ThemeContrastChecker({
                       type="button"
                       className="cc-theme-card__trash"
                       aria-label={`Delete ${t.name}`}
+                      disabled={paletteBusy}
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteSaved(t.id);
+                        setDeleteTarget(t);
                       }}
                     >
                       <TrashIcon />
@@ -688,6 +730,13 @@ export function ThemeContrastChecker({
           }
           commitSettings({ ...settings, neutralSeed: hex });
         }}
+      />
+
+      <DeletePaletteDialog
+        open={deleteTarget != null}
+        paletteName={deleteTarget?.name ?? ""}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => void confirmDeleteSaved()}
       />
     </section>
   );

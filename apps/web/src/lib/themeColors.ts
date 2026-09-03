@@ -2003,11 +2003,15 @@ export function writeSavedThemes(list: SavedTheme[]): void {
 
 export function nextThemeName(existing: SavedTheme[]): string {
   const used = new Set(existing.map((t) => t.name));
-  for (let i = 1; i < 100; i += 1) {
-    const name = `Custom ${String(i).padStart(2, "0")}`;
+  for (let i = 0; i < 26; i += 1) {
+    const name = `Paleta ${String.fromCharCode(65 + i)}`;
     if (!used.has(name)) return name;
   }
-  return "Custom";
+  for (let i = 1; i < 100; i += 1) {
+    const name = `Paleta ${i}`;
+    if (!used.has(name)) return name;
+  }
+  return "Paleta";
 }
 
 export function makeThemeId(): string {
