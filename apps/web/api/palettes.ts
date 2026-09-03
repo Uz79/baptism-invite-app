@@ -5,7 +5,7 @@ import {
   loadPalettes,
   savePalettes,
   type StoredPalette,
-} from "../server/paletteStore";
+} from "../server/paletteStore.js";
 
 function sendJson(res: VercelResponse, status: number, body: unknown) {
   res.statusCode = status;
