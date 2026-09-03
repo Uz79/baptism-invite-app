@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { put, list } from "@vercel/blob";
 
-import { SEED_PALETTES } from "../src/data/seedPalettes";
+import { SEED_PALETTES } from "../src/data/seedPalettes.js";
 
 const BLOB_PATHNAME = "baptism-invite/palettes.json";
 
@@ -81,7 +81,13 @@ export async function loadPalettes(): Promise<StoredPalette[]> {
   if (hasBlob()) {
     const fromBlob = await readBlob();
     if (fromBlob && fromBlob.length > 0) return fromBlob;
-    await writeBlob(SEED);
+    try {
+      await writeBlob(SEED);
+    } catch (err) {
+      // Seeding failed (storage misconfigured/unreachable). Still serve the
+      // seed palettes so guests get a working invite instead of a 500.
+      console.error("Blob seed write failed:", err);
+    }
     return structuredClone(SEED);
   }
   return readLocal();
