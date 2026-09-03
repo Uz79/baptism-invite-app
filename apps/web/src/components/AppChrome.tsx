@@ -27,7 +27,7 @@ export function AppChrome({ title, onThemeOpen, children }: AppChromeProps) {
         <IconButton
           size="sm"
           className="app-chrome__menu-btn"
-          aria-label="Open theme settings"
+          aria-label="Open settings"
           onClick={onThemeOpen}
         >
           <MenuIcon />

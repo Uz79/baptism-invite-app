@@ -1,23 +1,27 @@
 # theme-setting
 
-Figma: [Des-Sys-Test](https://www.figma.com/design/IKZcKBuZfweNRvRI0Ji6X3/Des-Sys-Test?node-id=1122-56102)
+Figma: [Des-Sys-Test — Baptism Invite Maja](https://www.figma.com/design/IKZcKBuZfweNRvRI0Ji6X3/Des-Sys-Test?node-id=1162-67089)
 
-Mobile theme settings sheet for the baptism invite app.
+**Advanced access (admin)** — owner URL (`?admin=TOKEN`). Build themes that guests can pick.
 
 ## Layout
 
-1. **Theme** header — title, light/dark toggle, close
-2. **Neutral color** — click & set circle, foreground/background ramps
-3. **Theme colors** — Monochrome | Multi-color
-4. **Live preview** — select field + actions
-5. **Confirm** footer button
+1. **Nastawienia** header — close
+2. **Light / Dark** shell toggle
+3. **Neutral color** — click & set, foreground/background ramps
+4. **Theme colors** — Monochrome | Multi-color
+5. **Primary color** (multicolor only) — click & set, accent ramp
+6. **Live preview** — real components
+7. **Palety** — Jednobarwne or Wielobarwne list, **+ Dodaj**, delete
+8. **Potwierdź** footer
 
 ## Variants
 
 | Variant | Breakpoint | Asset |
 |---------|------------|--------|
-| monochrome | mobile-default | `variants/monochrome/mobile-default/default.svg` (+ `default.png`) |
+| monochrome | mobile-default | `variants/monochrome/mobile-default/default.svg` |
+| multicolor | mobile-default | `variants/multicolor/mobile-default/default.svg` |
 
-## App route
+## App
 
-Opened from the Overview hamburger menu — implemented in `apps/web/src/components/theme/ThemeFlowOverlay.tsx` and `ThemeContrastChecker.tsx`.
+`ThemeFlowOverlay` + `ThemeContrastChecker` when admin access is verified.
