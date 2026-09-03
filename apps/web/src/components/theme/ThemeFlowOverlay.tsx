@@ -170,44 +170,46 @@ export function ThemeFlowOverlay({
         aria-hidden={!open}
       >
         <div className="modal modal--theme-flow" ref={modalRef}>
-          <header className="modal__nav modal__nav--stacked" data-scroll-edge-nav>
-            <h2 className="modal__title" id={titleId}>
-              {title}
-            </h2>
-            <button
-              ref={closeBtnRef}
-              type="button"
-              className="modal__close"
-              aria-label="Close theme"
-              onClick={onClose}
-            >
-              <svg className="modal__close-icon" viewBox="0 0 24 24" aria-hidden>
-                <path
-                  d="M6.4 6.4 17.6 17.6M17.6 6.4 6.4 17.6"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
+          <div className="modal__chrome" data-scroll-edge-nav>
+            <header className="modal__nav modal__nav--stacked">
+              <h2 className="modal__title" id={titleId}>
+                {title}
+              </h2>
+              <button
+                ref={closeBtnRef}
+                type="button"
+                className="modal__close"
+                aria-label="Close theme"
+                onClick={onClose}
+              >
+                <svg className="modal__close-icon" viewBox="0 0 24 24" aria-hidden>
+                  <path
+                    d="M6.4 6.4 17.6 17.6M17.6 6.4 6.4 17.6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </header>
+            {showShellToggle && theme && onThemeChange ? (
+              <div className="modal__shell-toggle-row">
+                <SegmentedControl
+                  size="sm"
+                  block
+                  className="modal__theme-toggle"
+                  aria-label="Light or dark theme"
+                  value={theme}
+                  onChange={onThemeChange}
+                  options={[
+                    { value: "light", label: "Light" },
+                    { value: "dark", label: "Dark" },
+                  ]}
                 />
-              </svg>
-            </button>
-          </header>
-          {showShellToggle && theme && onThemeChange ? (
-            <div className="modal__shell-toggle-row">
-              <SegmentedControl
-                size="sm"
-                block
-                className="modal__theme-toggle"
-                aria-label="Light or dark theme"
-                value={theme}
-                onChange={onThemeChange}
-                options={[
-                  { value: "light", label: "Light" },
-                  { value: "dark", label: "Dark" },
-                ]}
-              />
-            </div>
-          ) : null}
+              </div>
+            ) : null}
+          </div>
           <div className="modal__body modal__body--theme-flow" data-scroll-edge>
             <div data-scroll-edge-content>{children}</div>
           </div>

@@ -14,6 +14,9 @@ import {
   settingsFromPair,
   shellThemeFromPair,
   applyDerivedTokens,
+  hexToRgb,
+  normalizeHex,
+  rgbToHex,
   type SavedTheme,
 } from "./lib/themeColors";
 import {
@@ -27,6 +30,81 @@ import { fetchPalettes } from "./lib/palettesApi";
 import type { Theme } from "./types/theme";
 
 const booted = bootColorOverride();
+
+function cssVar(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function toHex(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const asHex = normalizeHex(raw);
+  if (asHex) return asHex;
+  const rgb = raw.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (rgb) {
+    return rgbToHex(Number(rgb[1]), Number(rgb[2]), Number(rgb[3]));
+  }
+  return null;
+}
+
+function hexEq(a: string | undefined, b: string | undefined): boolean {
+  const left = toHex(a);
+  const right = toHex(b);
+  return Boolean(left && right && left === right);
+}
+
+function rgbDist(a: string | undefined, b: string | undefined): number {
+  const left = hexToRgb(toHex(a) || "");
+  const right = hexToRgb(toHex(b) || "");
+  if (!left || !right) return Number.POSITIVE_INFINITY;
+  const dr = left.r - right.r;
+  const dg = left.g - right.g;
+  const db = left.b - right.b;
+  return dr * dr + dg * dg + db * db;
+}
+
+function palettePair(palette: SavedTheme, mode: Theme) {
+  return pairFromSettings(settingsFromPair(palette, mode), mode);
+}
+
+/** Match the live invite colors to a saved palette; default Paleta A. */
+function resolveGuestPalette(
+  list: SavedTheme[],
+  mode: Theme,
+  current: SavedTheme | null
+): SavedTheme | null {
+  const remembered = getGuestPaletteId();
+  if (remembered) {
+    const hit = list.find((p) => p.id === remembered);
+    if (hit) return hit;
+  }
+  if (current && list.some((p) => p.id === current.id)) return current;
+
+  const saved = readSavedOverride();
+  const liveBg = saved?.bg || cssVar("--color-bg") || cssVar("--background-background");
+  const liveAccent = saved?.fg || cssVar("--color-fg-interactive");
+  const liveNeutral =
+    saved?.neutral || cssVar("--color-fg") || cssVar("--foreground-foreground");
+
+  const looksMulticolor = rgbDist(liveAccent, liveNeutral) > 40 * 40;
+  const pool = list.filter((palette) => {
+    const kind = palette.kind ?? "multicolor";
+    return looksMulticolor ? kind === "multicolor" : kind === "monochrome";
+  });
+
+  let best: { palette: SavedTheme; dist: number } | null = null;
+  for (const palette of pool) {
+    const pair = palettePair(palette, mode);
+    if (!hexEq(pair.bg, liveBg)) continue;
+    const dist = looksMulticolor
+      ? rgbDist(pair.fg, liveAccent)
+      : rgbDist(pair.fg, liveNeutral);
+    if (!best || dist < best.dist) best = { palette, dist };
+  }
+
+  if (best && best.dist <= 40 * 40) return best.palette;
+
+  return list.find((p) => p.id === "seed-mono-a") ?? list.find((p) => p.kind === "monochrome") ?? list[0] ?? null;
+}
 
 function AppContent() {
   const [theme, setTheme] = useState<Theme>(() => {
@@ -96,29 +174,44 @@ function AppContent() {
     };
   }, [accessReady, accessMode]);
 
-  const handleThemeChange = useCallback((next: Theme) => {
-    setTheme((current) => {
-      const saved = readSavedOverride();
-      if (saved) {
-        applyThemeChoice(next, saved, current);
-      } else {
-        clearDerivedTokens();
-        document.documentElement.dataset.theme = next;
-      }
-      setThemeSyncKey((k) => k + 1);
-      return next;
-    });
-  }, []);
+  const handleThemeChange = useCallback(
+    (next: Theme) => {
+      setTheme((current) => {
+        if (accessMode === "guest" && guestSelected) {
+          const settings = settingsFromPair(guestSelected, next);
+          const pair = pairFromSettings(settings, next);
+          applyDerivedTokens(pair.bg, pair.fg, pair.neutral, pair.kind, {
+            neutralSeed: pair.neutralSeed,
+            primarySeed: pair.primarySeed,
+          });
+        } else {
+          const saved = readSavedOverride();
+          if (saved) {
+            applyThemeChoice(next, saved, current);
+          } else {
+            clearDerivedTokens();
+            document.documentElement.dataset.theme = next;
+          }
+        }
+        setThemeSyncKey((k) => k + 1);
+        return next;
+      });
+    },
+    [accessMode, guestSelected]
+  );
 
   const openThemeFlow = useCallback(() => {
-    setGuestSelected(null);
     setThemeFlowOpen(true);
     setThemeSyncKey((k) => k + 1);
-  }, []);
+    if (accessMode !== "guest") return;
+    void fetchPalettes().then((list) => {
+      const current = resolveGuestPalette(list, theme, guestSelected);
+      if (current) setGuestSelected(current);
+    });
+  }, [accessMode, theme, guestSelected]);
 
   const closeThemeFlow = useCallback(() => {
     setThemeFlowOpen(false);
-    setGuestSelected(null);
   }, []);
 
   const applyGuestPalette = useCallback(
@@ -159,8 +252,8 @@ function AppContent() {
         open={themeFlowOpen}
         onClose={closeThemeFlow}
         theme={theme}
-        onThemeChange={isAdmin ? handleThemeChange : undefined}
-        showShellToggle={isAdmin}
+        onThemeChange={handleThemeChange}
+        showShellToggle
         title={isAdmin ? "Nastawienia" : "Wybierz twoje kolory"}
         confirmLabel="Potwierdź"
         confirmDisabled={!isAdmin && !guestSelected}

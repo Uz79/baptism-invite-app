@@ -1,6 +1,6 @@
 # baptism-invite
 
-Figma: [Des-Sys-Test](https://www.figma.com/design/IKZcKBuZfweNRvRI0Ji6X3/Des-Sys-Test?node-id=1122-56102)
+Figma: [Des-Sys-Test — Baptism Invite Maja](https://www.figma.com/design/IKZcKBuZfweNRvRI0Ji6X3/Des-Sys-Test?node-id=1162-67089)
 
 Mobile invitation screen with schedule and navigation links for the baptism of Maja Freya Szatanik.
 

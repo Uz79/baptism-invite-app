@@ -14,10 +14,12 @@ export function useScrollEdgeChrome(
     const root = rootRef.current;
     if (!root) return;
 
-    const nav = root.querySelector<HTMLElement>(".modal__nav, [data-scroll-edge-nav]");
-    const footer = root.querySelector<HTMLElement>(
-      ".modal__footer, [data-scroll-edge-footer]",
-    );
+    const nav =
+      root.querySelector<HTMLElement>("[data-scroll-edge-nav]") ??
+      root.querySelector<HTMLElement>(".modal__nav");
+    const footer =
+      root.querySelector<HTMLElement>("[data-scroll-edge-footer]") ??
+      root.querySelector<HTMLElement>(".modal__footer");
 
     let boundScrollEl: HTMLElement | null = null;
     let boundContentEl: Element | null = null;
