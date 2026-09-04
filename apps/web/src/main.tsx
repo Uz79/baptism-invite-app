@@ -13,8 +13,8 @@ import "./styles/theme-flow.css";
  * provider is skipped, and every usePostHog() call resolves to undefined — so
  * the capture calls in components no-op safely.
  *
- * cookieless_mode + person_profiles:"never" means no cookies, no localStorage
- * and no stored identifiers, so guests need no consent banner.
+ * persistence:"memory" + person_profiles:"never" means no cookies, no
+ * localStorage and no stored identifiers, so guests need no consent banner.
  */
 const posthogKey = import.meta.env.VITE_POSTHOG_KEY;
 
