@@ -1,5 +1,19 @@
 [
   {
+    "id": "t_6947ce464af7c_1a06c35a0e4",
+    "name": "multi F",
+    "bg": "#ffffff",
+    "fg": "#1e3399",
+    "neutral": "#35373b",
+    "kind": "multicolor",
+    "neutralSeed": "#3a3d42",
+    "primarySeed": "#1c2f8c",
+    "bgIndex": 0,
+    "fgIndex": 10,
+    "primaryIndex": 8,
+    "createdAt": 1788521849060
+  },
+  {
     "id": "t_0aae4869650ed8_1a068c947ce",
     "name": "Paleta I",
     "bg": "#ffffff",

@@ -16,10 +16,16 @@
   isolation: isolate;
 }
 
-/* Baptism invite: theme sheet matches the centered app column width */
+/* Baptism invite: full-bleed shell ≤600dp; centered column above */
 .modal-overlay--theme-flow .modal-shell {
   width: 100%;
-  max-width: var(--app-column-max-width, 23.4375rem);
+  max-width: none;
+}
+
+@media (min-width: 601px) {
+  .modal-overlay--theme-flow .modal-shell {
+    max-width: var(--app-column-max-width, 37.5rem);
+  }
 }
 
 .modal-overlay::before {
@@ -152,7 +158,7 @@ body.body--theme-flow-open {
 }
 
 .modal__nav--stacked {
-  padding-bottom: var(--space-2);
+  padding-bottom: 0;
 }
 
 .modal__nav--stacked .modal__title {
@@ -162,7 +168,9 @@ body.body--theme-flow-open {
 }
 
 .modal__shell-toggle-row {
-  padding: 0 var(--theme-flow-inline-padding, var(--space-3)) var(--space-3);
+  /* Figma Main Box: Theme Switch at y=12 under Nav Bar */
+  padding: var(--space-3) var(--theme-flow-inline-padding, var(--space-3))
+    var(--space-3);
 }
 
 .modal__shell-toggle-row .modal__theme-toggle {
@@ -199,13 +207,15 @@ body.body--theme-flow-open {
   right: var(--space-3);
   top: 50%;
   transform: translateY(-50%);
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
+  min-height: 2rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background: none;
+  background-color: var(--button-icon-only-background, transparent);
   border: none;
   box-shadow: none;
   padding: 0;
@@ -228,8 +238,8 @@ body.body--theme-flow-open {
 }
 
 .modal__close-icon {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.5rem;
+  height: 1.5rem;
   display: block;
 }
 
@@ -294,8 +304,14 @@ body.body--theme-flow-open {
   }
 
   .modal-overlay--theme-flow .modal-shell {
-    max-width: min(100%, var(--app-column-max-width, 23.4375rem));
+    max-width: none;
     width: 100%;
+  }
+
+  @media (min-width: 601px) {
+    .modal-overlay--theme-flow .modal-shell {
+      max-width: var(--app-column-max-width, 37.5rem);
+    }
   }
 
   .modal {
