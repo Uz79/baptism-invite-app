@@ -98,7 +98,11 @@ export function ThemeFlowOverlay({
           shell.classList.remove("modal-shell--offscreen");
           window.setTimeout(() => {
             setSettled(true);
-            closeBtnRef.current?.focus();
+            /* Keyboard / fine pointer only — mobile focus ring clips at the edge. */
+            const finePointer =
+              typeof window.matchMedia === "function" &&
+              window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+            if (finePointer) closeBtnRef.current?.focus();
           }, OPEN_MS);
         });
       });

@@ -290,6 +290,14 @@ body.body--theme-flow-open {
   outline-offset: 0.125rem;
 }
 
+/* Touch / mobile browsers: no focus ring (clips at the sheet edge). */
+@media (hover: none), (pointer: coarse) {
+  .modal__close:focus,
+  .modal__close:focus-visible {
+    outline: none;
+  }
+}
+
 .modal__close-icon {
   width: 1.5rem;
   height: 1.5rem;
