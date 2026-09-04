@@ -26,7 +26,11 @@ if (posthogKey) {
     api_host: import.meta.env.VITE_POSTHOG_HOST ?? "/ingest",
     ui_host: "https://eu.posthog.com",
     defaults: "2026-05-30",
-    cookieless_mode: "always",
+    /* Memory-only persistence: no cookies, no localStorage, so still no
+       consent banner. NOT cookieless_mode — that needs "Cookieless server
+       hash mode" enabled on the PostHog project, and without it the SDK
+       silently declines to send anything at all. */
+    persistence: "memory",
     person_profiles: "never",
   });
 }
