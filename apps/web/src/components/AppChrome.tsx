@@ -21,7 +21,10 @@ function MenuIcon() {
   );
 }
 
-/** Banking-style shadow under the sticky bar once content scrolls beneath it. */
+/**
+ * Banking-style content indication: shadow under the sticky bar once page
+ * content scrolls beneath it.
+ */
 function useStickyBarScrollEdge(barRef: RefObject<HTMLElement | null>) {
   useEffect(() => {
     const bar = barRef.current;

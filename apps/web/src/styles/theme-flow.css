@@ -203,7 +203,7 @@ body.body--theme-flow-open {
 }
 
 .modal__shell-toggle-row {
-  /* Figma: 12dp under nav before Light/Dark */
+  /* Figma: 12dp under nav before Jasne/Ciemne */
   padding: var(--space-3) var(--theme-flow-inline-padding, var(--space-3))
     var(--space-3);
 }
