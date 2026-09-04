@@ -2001,30 +2001,67 @@ export function writeSavedThemes(list: SavedTheme[]): void {
   }
 }
 
-/** Display label for the nth palette of a kind: "mono A", "multi C", … */
-export function paletteLabel(kind: ThemeKind, index: number): string {
+/** Display label for a kind + letter: "mono A", "multi F", … */
+export function paletteLabel(kind: ThemeKind, letter: string): string {
   const prefix = kind === "monochrome" ? "mono" : "multi";
-  return `${prefix} ${index < 26 ? String.fromCharCode(65 + index) : String(index + 1)}`;
+  return `${prefix} ${letter}`;
+}
+
+function seedPaletteLetter(id: string): string | null {
+  const match = id.match(/^seed-(?:mono|multi)-([a-z])$/i);
+  return match ? match[1].toUpperCase() : null;
+}
+
+function nextFreeLetter(used: Set<string>): string {
+  for (let i = 0; i < 26; i += 1) {
+    const letter = String.fromCharCode(65 + i);
+    if (!used.has(letter)) {
+      used.add(letter);
+      return letter;
+    }
+  }
+  const fallback = String(used.size + 1);
+  used.add(fallback);
+  return fallback;
 }
 
 /**
- * Relabel a list so each palette is named by its position within its own kind.
- * Applied on every read, so palettes stored under the older "Paleta X" scheme
- * display correctly without needing a migration of the shared store.
+ * Relabel a list so each palette is named by letter within its kind.
+ * Seed ids (`seed-multi-f`) keep a stable letter (F) so defaults like
+ * “multi F” stay put even when custom palettes are prepended.
  */
 export function withDisplayNames(list: SavedTheme[]): SavedTheme[] {
-  let mono = 0;
-  let multi = 0;
-  return list.map((p) => {
-    const kind = p.kind ?? "multicolor";
-    const index = kind === "monochrome" ? mono++ : multi++;
-    return { ...p, name: paletteLabel(kind, index) };
+  const usedMono = new Set<string>();
+  const usedMulti = new Set<string>();
+
+  for (const palette of list) {
+    const letter = seedPaletteLetter(palette.id);
+    if (!letter) continue;
+    const kind = palette.kind ?? "multicolor";
+    (kind === "monochrome" ? usedMono : usedMulti).add(letter);
+  }
+
+  return list.map((palette) => {
+    const kind = palette.kind ?? "multicolor";
+    const used = kind === "monochrome" ? usedMono : usedMulti;
+    const letter = seedPaletteLetter(palette.id) ?? nextFreeLetter(used);
+    return { ...palette, name: paletteLabel(kind, letter) };
   });
 }
 
 export function nextThemeName(existing: SavedTheme[], kind: ThemeKind = "multicolor"): string {
-  const sameKind = existing.filter((t) => (t.kind ?? "multicolor") === kind);
-  return paletteLabel(kind, sameKind.length);
+  const used = new Set<string>();
+  for (const palette of existing) {
+    if ((palette.kind ?? "multicolor") !== kind) continue;
+    const seed = seedPaletteLetter(palette.id);
+    if (seed) {
+      used.add(seed);
+      continue;
+    }
+    const match = palette.name.match(/\b([A-Z])\b/);
+    if (match) used.add(match[1]);
+  }
+  return paletteLabel(kind, nextFreeLetter(used));
 }
 
 export function makeThemeId(): string {

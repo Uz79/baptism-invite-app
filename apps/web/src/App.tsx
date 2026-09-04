@@ -66,7 +66,18 @@ function palettePair(palette: SavedTheme, mode: Theme) {
   return pairFromSettings(settingsFromPair(palette, mode), mode);
 }
 
-/** Match the live invite colors to a saved palette; default Paleta A. */
+const DEFAULT_GUEST_PALETTE_ID = "seed-multi-f";
+
+function findDefaultGuestPalette(list: SavedTheme[]): SavedTheme | null {
+  return (
+    list.find((p) => p.id === DEFAULT_GUEST_PALETTE_ID) ??
+    list.find((p) => (p.kind ?? "multicolor") === "multicolor") ??
+    list[0] ??
+    null
+  );
+}
+
+/** Match the live invite colors to a saved palette; default multi F + light. */
 function resolveGuestPalette(
   list: SavedTheme[],
   mode: Theme,
@@ -103,7 +114,7 @@ function resolveGuestPalette(
 
   if (best && best.dist <= 40 * 40) return best.palette;
 
-  return list.find((p) => p.id === "seed-mono-a") ?? list.find((p) => p.kind === "monochrome") ?? list[0] ?? null;
+  return findDefaultGuestPalette(list);
 }
 
 function AppContent() {
@@ -151,23 +162,27 @@ function AppContent() {
 
   useEffect(() => {
     if (!accessReady || accessMode !== "guest") return;
-    const id = getGuestPaletteId();
-    if (!id) return;
     let cancelled = false;
     fetchPalettes().then((list) => {
       if (cancelled) return;
-      const hit = list.find((p) => p.id === id);
+      const rememberedId = getGuestPaletteId();
+      const hit = rememberedId
+        ? list.find((p) => p.id === rememberedId)
+        : findDefaultGuestPalette(list);
       if (!hit) return;
-      const shellGuess: Theme = shellThemeFromPair(hit.bg, hit.fg);
-      const settings = settingsFromPair(hit, shellGuess);
-      const pair = pairFromSettings(settings, shellGuess);
+
+      /* Default guest shell is Jasne; only infer shell from a remembered pick. */
+      const shell: Theme = rememberedId ? shellThemeFromPair(hit.bg, hit.fg) : "light";
+      const settings = settingsFromPair(hit, shell);
+      const pair = pairFromSettings(settings, shell);
       applyDerivedTokens(pair.bg, pair.fg, pair.neutral, pair.kind, {
         neutralSeed: pair.neutralSeed,
         primarySeed: pair.primarySeed,
       });
       saveOverride(pair);
-      setTheme(shellGuess);
-      document.documentElement.dataset.theme = shellGuess;
+      setGuestSelected(hit);
+      setTheme(shell);
+      document.documentElement.dataset.theme = shell;
     });
     return () => {
       cancelled = true;
@@ -254,7 +269,7 @@ function AppContent() {
         theme={theme}
         onThemeChange={handleThemeChange}
         showShellToggle
-        title={isAdmin ? "Nastawienia" : "Wybierz twoje kolory"}
+        title={isAdmin ? "Nastawienia" : "Wybierz kolory"}
         confirmLabel="Potwierdź"
         confirmDisabled={!isAdmin && !guestSelected}
         onConfirm={isAdmin ? undefined : confirmGuestPalette}

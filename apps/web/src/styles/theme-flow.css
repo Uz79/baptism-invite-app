@@ -16,10 +16,51 @@
   isolation: isolate;
 }
 
-/* Baptism invite: theme sheet matches the centered app column width */
+/* Theme flow:
+   ≤600dp → full-bleed sheet
+   >600dp → centered rounded popup panel (not a tall phone-column) */
+.modal-overlay--theme-flow {
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
 .modal-overlay--theme-flow .modal-shell {
   width: 100%;
-  max-width: var(--app-column-max-width, 23.4375rem);
+  max-width: var(--app-column-max-width, 37.5rem);
+  min-height: 0;
+  border-radius: var(--radius-regular);
+  box-shadow: 0 0.5rem 2rem var(--color-modal-elevated-shadow);
+}
+
+.modal-overlay--theme-flow .modal {
+  height: auto;
+  max-height: min(90vh, calc(100dvh - 2 * var(--space-4)));
+  min-height: 0;
+  border-radius: var(--radius-regular);
+}
+
+@media (max-width: 600px) {
+  .modal-overlay--theme-flow {
+    padding: 0;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .modal-overlay--theme-flow .modal-shell {
+    max-width: none;
+    width: 100%;
+    min-height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .modal-overlay--theme-flow .modal {
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 100dvh;
+    border-radius: 0;
+  }
 }
 
 .modal-overlay::before {
@@ -152,7 +193,7 @@ body.body--theme-flow-open {
 }
 
 .modal__nav--stacked {
-  padding-bottom: var(--space-2);
+  padding-bottom: 0;
 }
 
 .modal__nav--stacked .modal__title {
@@ -162,7 +203,9 @@ body.body--theme-flow-open {
 }
 
 .modal__shell-toggle-row {
-  padding: 0 var(--theme-flow-inline-padding, var(--space-3)) var(--space-3);
+  /* Figma: 12dp under nav before Light/Dark */
+  padding: var(--space-3) var(--theme-flow-inline-padding, var(--space-3))
+    var(--space-3);
 }
 
 .modal__shell-toggle-row .modal__theme-toggle {
@@ -199,13 +242,15 @@ body.body--theme-flow-open {
   right: var(--space-3);
   top: 50%;
   transform: translateY(-50%);
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
+  min-height: 2rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background: none;
+  background-color: var(--button-icon-only-background, transparent);
   border: none;
   box-shadow: none;
   padding: 0;
@@ -228,8 +273,8 @@ body.body--theme-flow-open {
 }
 
 .modal__close-icon {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.5rem;
+  height: 1.5rem;
   display: block;
 }
 
@@ -273,19 +318,13 @@ body.body--theme-flow-open {
 }
 
 @media (max-width: 1023px) {
-  .modal-overlay {
+  .modal-overlay:not(.modal-overlay--theme-flow) {
     padding: 0;
     align-items: stretch;
     justify-content: flex-start;
   }
 
-  .modal-overlay--theme-flow {
-    align-items: center;
-    justify-content: flex-end;
-    padding: 0;
-  }
-
-  .modal-shell {
+  .modal-overlay:not(.modal-overlay--theme-flow) .modal-shell {
     max-width: none;
     width: 100%;
     min-height: 100dvh;
@@ -293,12 +332,7 @@ body.body--theme-flow-open {
     box-shadow: none;
   }
 
-  .modal-overlay--theme-flow .modal-shell {
-    max-width: min(100%, var(--app-column-max-width, 23.4375rem));
-    width: 100%;
-  }
-
-  .modal {
+  .modal-overlay:not(.modal-overlay--theme-flow) .modal {
     height: 100dvh;
     max-height: 100dvh;
     min-height: 100dvh;

@@ -179,7 +179,7 @@ export function ThemeFlowOverlay({
                 ref={closeBtnRef}
                 type="button"
                 className="modal__close"
-                aria-label="Close theme"
+                aria-label="Zamknij"
                 onClick={onClose}
               >
                 <svg className="modal__close-icon" viewBox="0 0 24 24" aria-hidden>
@@ -199,12 +199,12 @@ export function ThemeFlowOverlay({
                   size="sm"
                   block
                   className="modal__theme-toggle"
-                  aria-label="Light or dark theme"
+                  aria-label="Motyw jasny lub ciemny"
                   value={theme}
                   onChange={onThemeChange}
                   options={[
-                    { value: "light", label: "Light" },
-                    { value: "dark", label: "Dark" },
+                    { value: "light", label: "Jasne" },
+                    { value: "dark", label: "Ciemne" },
                   ]}
                 />
               </div>
