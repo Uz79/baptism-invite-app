@@ -20,7 +20,11 @@ const posthogKey = import.meta.env.VITE_POSTHOG_KEY;
 
 if (posthogKey) {
   posthog.init(posthogKey, {
-    api_host: import.meta.env.VITE_POSTHOG_HOST ?? "https://eu.i.posthog.com",
+    /* Same-origin proxy (see rewrites in vercel.json). Requests go to
+       /ingest on our own domain instead of eu.i.posthog.com, so tracker
+       blocklists and DNS-level filtering do not drop them. */
+    api_host: import.meta.env.VITE_POSTHOG_HOST ?? "/ingest",
+    ui_host: "https://eu.posthog.com",
     defaults: "2026-05-30",
     cookieless_mode: "always",
     person_profiles: "never",
