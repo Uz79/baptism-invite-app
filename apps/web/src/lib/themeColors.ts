@@ -2026,7 +2026,8 @@ function nextFreeLetter(used: Set<string>): string {
 }
 
 /**
- * Relabel a list so each palette is named by letter within its kind.
+ * Relabel a list so each palette is named by letter within its kind,
+ * then sort A→Z by that display name (carousel order).
  * Seed ids (`seed-multi-f`) keep a stable letter (F) so defaults like
  * “multi F” stay put even when custom palettes are prepended.
  */
@@ -2041,12 +2042,16 @@ export function withDisplayNames(list: SavedTheme[]): SavedTheme[] {
     (kind === "monochrome" ? usedMono : usedMulti).add(letter);
   }
 
-  return list.map((palette) => {
-    const kind = palette.kind ?? "multicolor";
-    const used = kind === "monochrome" ? usedMono : usedMulti;
-    const letter = seedPaletteLetter(palette.id) ?? nextFreeLetter(used);
-    return { ...palette, name: paletteLabel(kind, letter) };
-  });
+  return list
+    .map((palette) => {
+      const kind = palette.kind ?? "multicolor";
+      const used = kind === "monochrome" ? usedMono : usedMulti;
+      const letter = seedPaletteLetter(palette.id) ?? nextFreeLetter(used);
+      return { ...palette, name: paletteLabel(kind, letter) };
+    })
+    .sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" })
+    );
 }
 
 export function nextThemeName(existing: SavedTheme[], kind: ThemeKind = "multicolor"): string {

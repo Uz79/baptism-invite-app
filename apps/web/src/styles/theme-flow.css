@@ -185,10 +185,13 @@ body.body--theme-flow-open {
 }
 
 .modal__nav {
-  display: flex;
+  /* Match .app-chrome__bar: same grid, padding, and icon column so
+     title + close share one horizontal centerline with the main bar. */
+  display: grid;
+  grid-template-columns: 2rem 1fr 2rem;
   align-items: center;
-  justify-content: center;
-  padding: var(--theme-flow-inline-padding, var(--space-3));
+  gap: var(--space-2);
+  padding: var(--space-2) var(--theme-flow-inline-padding, var(--space-3));
   position: relative;
 }
 
@@ -196,10 +199,16 @@ body.body--theme-flow-open {
   padding-bottom: 0;
 }
 
+.modal__nav-spacer {
+  width: 2rem;
+  height: 2rem;
+}
+
 .modal__nav--stacked .modal__title {
-  width: 100%;
+  width: auto;
+  min-width: 0;
   text-align: center;
-  padding-inline: 3.5rem;
+  padding-inline: 0;
 }
 
 .modal__shell-toggle-row {
@@ -234,7 +243,7 @@ body.body--theme-flow-open {
   font-weight: var(--fw-medium);
   line-height: var(--lh-text);
   color: var(--color-fg);
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 .modal__close {
@@ -257,6 +266,15 @@ body.body--theme-flow-open {
   border-radius: var(--radius-small);
   color: var(--button-icon-only-foreground, var(--color-fg));
   transition: background-color 0.15s ease;
+}
+
+/* Flow top bar: sit in the right grid cell (not absolute) so it centers
+   with the title the same way the menu icon does on Overview. */
+.modal--theme-flow .modal__nav .modal__close {
+  position: static;
+  transform: none;
+  inset: auto;
+  justify-self: end;
 }
 
 .modal__close:hover {

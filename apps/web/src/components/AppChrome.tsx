@@ -73,7 +73,7 @@ export function AppChrome({ title, onThemeOpen, children }: AppChromeProps) {
         >
           <MenuIcon />
         </IconButton>
-        <h1 className="app-chrome__title type-md type-medium type-trim">{title}</h1>
+        <h1 className="app-chrome__title type-lg type-medium type-trim">{title}</h1>
         <span className="app-chrome__bar-spacer" aria-hidden />
       </header>
 

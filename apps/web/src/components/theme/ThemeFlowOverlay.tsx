@@ -172,7 +172,8 @@ export function ThemeFlowOverlay({
         <div className="modal modal--theme-flow" ref={modalRef}>
           <div className="modal__chrome" data-scroll-edge-nav>
             <header className="modal__nav modal__nav--stacked">
-              <h2 className="modal__title" id={titleId}>
+              <span className="modal__nav-spacer" aria-hidden />
+              <h2 className="modal__title type-lg type-medium type-trim" id={titleId}>
                 {title}
               </h2>
               <button
