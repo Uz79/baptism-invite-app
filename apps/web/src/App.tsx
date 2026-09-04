@@ -270,6 +270,7 @@ function AppContent() {
             theme={theme}
             selectedId={guestSelected?.id ?? null}
             onSelect={applyGuestPalette}
+            syncKey={themeSyncKey}
           />
         )}
       </ThemeFlowOverlay>

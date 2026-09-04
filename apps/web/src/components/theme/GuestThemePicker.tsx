@@ -11,6 +11,8 @@ type GuestThemePickerProps = {
   theme: ThemeMode;
   selectedId: string | null;
   onSelect: (palette: SavedTheme) => void;
+  /** Bumped each time the sheet opens, so the shared list is refetched. */
+  syncKey?: number;
 };
 
 function PaletteCard({
@@ -68,7 +70,12 @@ function PaletteCard({
   );
 }
 
-export function GuestThemePicker({ theme, selectedId, onSelect }: GuestThemePickerProps) {
+export function GuestThemePicker({
+  theme,
+  selectedId,
+  onSelect,
+  syncKey = 0,
+}: GuestThemePickerProps) {
   const [palettes, setPalettes] = useState<SavedTheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,8 +98,10 @@ export function GuestThemePicker({ theme, selectedId, onSelect }: GuestThemePick
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    /* Refetch on every open: the overlay keeps this component mounted, so
+       without syncKey a guest would keep seeing the list from their first
+       open and never pick up palettes the owner added since. */
+  }, [syncKey]);
 
   const mono = useMemo(
     () => palettes.filter((p) => (p.kind ?? "multicolor") === "monochrome"),
