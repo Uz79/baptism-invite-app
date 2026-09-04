@@ -28,34 +28,6 @@
     "createdAt": 1788464416718
   },
   {
-    "id": "t_e271d1ae6084c_1a068c5f3c9",
-    "name": "Paleta H",
-    "bg": "#ffffff",
-    "fg": "#70ffe0",
-    "neutral": "#595d5f",
-    "kind": "multicolor",
-    "neutralSeed": "#484c4d",
-    "primarySeed": "#7affe2",
-    "bgIndex": 0,
-    "fgIndex": 8,
-    "primaryIndex": 4,
-    "contrastByShell": {
-      "light": {
-        "bgIndex": 0,
-        "fgIndex": 8
-      },
-      "dark": {
-        "bgIndex": 3,
-        "fgIndex": 3
-      }
-    },
-    "primaryByShell": {
-      "light": 4,
-      "dark": 7
-    },
-    "createdAt": 1788464198601
-  },
-  {
     "id": "t_7e36756a8b39f_1a068bb086a",
     "name": "Paleta G",
     "bg": "#ffffff",

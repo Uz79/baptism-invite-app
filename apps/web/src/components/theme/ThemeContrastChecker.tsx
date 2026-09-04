@@ -220,6 +220,127 @@ function PrimaryAccessibilityHints({
   );
 }
 
+type PaletteCarouselProps = {
+  label: string;
+  items: SavedTheme[];
+  theme: Theme;
+  settings: ThemeSettings;
+  activePaletteId: string | null;
+  busy: boolean;
+  onApply: (t: SavedTheme) => void;
+  onDelete: (t: SavedTheme) => void;
+};
+
+function PaletteCarousel({
+  label,
+  items,
+  theme,
+  settings,
+  activePaletteId,
+  busy,
+  onApply,
+  onDelete,
+}: PaletteCarouselProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const headId = items[0]?.id ?? null;
+
+  /**
+   * Reset the scroll position whenever the head of the list changes — a save,
+   * a delete, or a refetch on reopen. Without this the browser keeps the old
+   * scrollLeft and a newly prepended palette stays parked off-screen left,
+   * which makes the admin list look like it is missing palettes the guest
+   * picker is showing.
+   */
+  useLayoutEffect(() => {
+    ref.current?.scrollTo({ left: 0, behavior: "auto" });
+  }, [headId]);
+
+  return (
+    <div className="cc-saved__group">
+      <p className="cc-saved__subtitle">{label}</p>
+      {items.length === 0 ? (
+        <p className="cc-saved__empty">Brak zapisanych palet.</p>
+      ) : (
+        <div ref={ref} className="palette-carousel" role="list" aria-label={label}>
+          {items.map((t) => {
+            const tSettings = settingsFromPair(t, theme);
+            const tPair = pairFromSettings(tSettings, theme);
+            const matchesLive =
+              tSettings.kind === settings.kind &&
+              tSettings.neutralSeed === settings.neutralSeed &&
+              tSettings.primarySeed === settings.primarySeed &&
+              tSettings.bgIndex === settings.bgIndex &&
+              tSettings.fgIndex === settings.fgIndex &&
+              tSettings.primaryIndex === settings.primaryIndex;
+            const selected = activePaletteId ? t.id === activePaletteId : matchesLive;
+            return (
+              <div key={t.id} className="palette-carousel__item" role="listitem">
+                <div
+                  className={`cc-theme-card${selected ? " cc-theme-card--selected" : ""}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={selected}
+                  onClick={() => onApply(t)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onApply(t);
+                    }
+                  }}
+                >
+                  <span className="cc-theme-card__header">
+                    <span className="cc-theme-card__title">{t.name}</span>
+                    <span className="cc-theme-card__actions">
+                      <button
+                        type="button"
+                        className="cc-theme-card__trash"
+                        aria-label={`Delete ${t.name}`}
+                        disabled={busy}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(t);
+                        }}
+                      >
+                        <TrashIcon />
+                      </button>
+                    </span>
+                  </span>
+                  <span className="cc-theme-card__row">
+                    <span
+                      className="cc-theme-card__swatch"
+                      style={{ background: tPair.neutral ?? tPair.fg }}
+                      aria-hidden
+                    />
+                    <span className="cc-theme-card__row-label">Pierwszy plan</span>
+                  </span>
+                  <span className="cc-theme-card__row">
+                    <span
+                      className="cc-theme-card__swatch"
+                      style={{ background: tPair.bg }}
+                      aria-hidden
+                    />
+                    <span className="cc-theme-card__row-label">Tło</span>
+                  </span>
+                  {tSettings.kind === "multicolor" ? (
+                    <span className="cc-theme-card__row">
+                      <span
+                        className="cc-theme-card__swatch"
+                        style={{ background: tPair.fg }}
+                        aria-hidden
+                      />
+                      <span className="cc-theme-card__row-label">Podstawowy</span>
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ThemeContrastChecker({
   theme,
   onThemeChange,
@@ -236,8 +357,6 @@ export function ThemeContrastChecker({
   const [paletteError, setPaletteError] = useState<string | null>(null);
   const [paletteBusy, setPaletteBusy] = useState(false);
   const [activePaletteId, setActivePaletteId] = useState<string | null>(null);
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const scrollCarouselHomeId = useRef<string | null>(null);
 
   const syncFromLive = useCallback(() => {
     const saved = readSavedOverride();
@@ -269,18 +388,15 @@ export function ThemeContrastChecker({
     };
   }, [syncKey]);
 
-  const visiblePalettes = useMemo(
-    () => savedThemes.filter((t) => (t.kind ?? "multicolor") === settings.kind),
-    [savedThemes, settings.kind]
+  const monochromePalettes = useMemo(
+    () => savedThemes.filter((t) => (t.kind ?? "multicolor") === "monochrome"),
+    [savedThemes]
   );
 
-  useLayoutEffect(() => {
-    const id = scrollCarouselHomeId.current;
-    if (!id) return;
-    if (visiblePalettes[0]?.id !== id) return;
-    carouselRef.current?.scrollTo({ left: 0, behavior: "smooth" });
-    scrollCarouselHomeId.current = null;
-  }, [visiblePalettes]);
+  const multicolorPalettes = useMemo(
+    () => savedThemes.filter((t) => (t.kind ?? "multicolor") === "multicolor"),
+    [savedThemes]
+  );
 
   const monochromeSeq = useMemo(
     () => buildMonochromeSequences(settings.neutralSeed, theme),
@@ -428,7 +544,6 @@ export function ThemeContrastChecker({
       };
       const next = await createPalette(themeCard);
       const prepended = [themeCard, ...next.filter((p) => p.id !== themeCard.id)];
-      scrollCarouselHomeId.current = themeCard.id;
       setSavedThemes(prepended);
       setActivePaletteId(themeCard.id);
       applySaved(themeCard);
@@ -650,93 +765,30 @@ export function ThemeContrastChecker({
               Dodaj
             </Button>
           </div>
-          <p className="cc-saved__subtitle">
-            {settings.kind === "monochrome" ? "Jednobarwne" : "Wielobarwne"}
-          </p>
           {paletteError ? <p className="cc-saved__error">{paletteError}</p> : null}
         </header>
-        <div
-          ref={carouselRef}
-          className="palette-carousel"
-          role="list"
-          aria-label="Saved palettes list"
-        >
-          {visiblePalettes.map((t) => {
-            const tSettings = settingsFromPair(t, theme);
-            const tPair = pairFromSettings(tSettings, theme);
-            const matchesLive =
-              tSettings.kind === settings.kind &&
-              tSettings.neutralSeed === settings.neutralSeed &&
-              tSettings.primarySeed === settings.primarySeed &&
-              tSettings.bgIndex === settings.bgIndex &&
-              tSettings.fgIndex === settings.fgIndex &&
-              tSettings.primaryIndex === settings.primaryIndex;
-            const selected = activePaletteId
-              ? t.id === activePaletteId
-              : matchesLive;
-            return (
-              <div key={t.id} className="palette-carousel__item" role="listitem">
-                <div
-                  className={`cc-theme-card${selected ? " cc-theme-card--selected" : ""}`}
-                  role="button"
-                  tabIndex={0}
-                  aria-pressed={selected}
-                  onClick={() => applySaved(t)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      applySaved(t);
-                    }
-                  }}
-                >
-                  <span className="cc-theme-card__header">
-                    <span className="cc-theme-card__title">{t.name}</span>
-                    <span className="cc-theme-card__actions">
-                      <button
-                        type="button"
-                        className="cc-theme-card__trash"
-                        aria-label={`Delete ${t.name}`}
-                        disabled={paletteBusy}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteTarget(t);
-                        }}
-                      >
-                        <TrashIcon />
-                      </button>
-                    </span>
-                  </span>
-                  <span className="cc-theme-card__row">
-                    <span
-                      className="cc-theme-card__swatch"
-                      style={{ background: tPair.neutral ?? tPair.fg }}
-                      aria-hidden
-                    />
-                    <span className="cc-theme-card__row-label">Pierwszy plan</span>
-                  </span>
-                  <span className="cc-theme-card__row">
-                    <span
-                      className="cc-theme-card__swatch"
-                      style={{ background: tPair.bg }}
-                      aria-hidden
-                    />
-                    <span className="cc-theme-card__row-label">Tło</span>
-                  </span>
-                  {tSettings.kind === "multicolor" ? (
-                    <span className="cc-theme-card__row">
-                      <span
-                        className="cc-theme-card__swatch"
-                        style={{ background: tPair.fg }}
-                        aria-hidden
-                      />
-                      <span className="cc-theme-card__row-label">Podstawowy</span>
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+
+        <PaletteCarousel
+          label="Jednobarwne"
+          items={monochromePalettes}
+          theme={theme}
+          settings={settings}
+          activePaletteId={activePaletteId}
+          busy={paletteBusy}
+          onApply={applySaved}
+          onDelete={setDeleteTarget}
+        />
+
+        <PaletteCarousel
+          label="Wielobarwne"
+          items={multicolorPalettes}
+          theme={theme}
+          settings={settings}
+          activePaletteId={activePaletteId}
+          busy={paletteBusy}
+          onApply={applySaved}
+          onDelete={setDeleteTarget}
+        />
       </section>
 
       <ThemeSetColorDialog

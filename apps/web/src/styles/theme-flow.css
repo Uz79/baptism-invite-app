@@ -1338,6 +1338,24 @@ body.body--theme-flow-open {
   color: var(--color-fg);
 }
 
+.cc-saved__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.cc-saved__group + .cc-saved__group {
+  margin-top: var(--space-4);
+}
+
+.cc-saved__empty {
+  margin: 0;
+  font-size: var(--fs-text-sm);
+  line-height: var(--lh-text);
+  opacity: 0.6;
+}
+
 .palette-carousel {
   --palette-carousel-gap: 1rem;
   --palette-card-width: 8.75rem;
