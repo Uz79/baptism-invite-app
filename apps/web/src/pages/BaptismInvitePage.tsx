@@ -9,7 +9,7 @@ type BaptismInvitePageProps = {
 export function BaptismInvitePage({ onThemeOpen }: BaptismInvitePageProps) {
   return (
     <div className="invite-app">
-      <AppChrome title="Overview" onThemeOpen={onThemeOpen}>
+      <AppChrome title="Przegląd" onThemeOpen={onThemeOpen}>
         <main className="invite-page">
           <header className="invite-hero">
             <h6 className="invite-hero__title type-h6 type-bold type-trim">{eventMeta.title}</h6>

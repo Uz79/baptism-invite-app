@@ -254,7 +254,7 @@ function AppContent() {
         theme={theme}
         onThemeChange={handleThemeChange}
         showShellToggle
-        title={isAdmin ? "Nastawienia" : "Wybierz twoje kolory"}
+        title={isAdmin ? "Nastawienia" : "Wybierz kolory"}
         confirmLabel="Potwierdź"
         confirmDisabled={!isAdmin && !guestSelected}
         onConfirm={isAdmin ? undefined : confirmGuestPalette}

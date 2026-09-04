@@ -2001,10 +2001,9 @@ export function writeSavedThemes(list: SavedTheme[]): void {
   }
 }
 
-/** Display label for the nth palette of a kind: "mono A", "multi C", … */
-export function paletteLabel(kind: ThemeKind, index: number): string {
-  const prefix = kind === "monochrome" ? "mono" : "multi";
-  return `${prefix} ${index < 26 ? String.fromCharCode(65 + index) : String(index + 1)}`;
+/** Display label for the nth palette of a kind: "Paleta A", "Paleta C", … */
+export function paletteLabel(_kind: ThemeKind, index: number): string {
+  return `Paleta ${index < 26 ? String.fromCharCode(65 + index) : String(index + 1)}`;
 }
 
 /**

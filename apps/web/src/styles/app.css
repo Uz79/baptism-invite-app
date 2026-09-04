@@ -21,7 +21,8 @@ body {
 }
 
 :root {
-  --app-column-max-width: 23.4375rem;
+  /* Full-bleed ≤600dp; above that, centered column caps at 600px */
+  --app-column-max-width: 37.5rem;
   --color-overlay-tint: var(--color-fg, var(--foreground-foreground));
   --shadow-content-indication-after: 0 0.125rem 2rem
     color-mix(in srgb, var(--color-overlay-tint) 10%, transparent);
@@ -38,12 +39,6 @@ html[data-theme="dark"] {
   --panel-drop-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
 }
 
-@media (min-width: 48rem) {
-  :root {
-    --app-column-max-width: 28rem;
-  }
-}
-
 .invite-app {
   min-height: 100dvh;
   display: flex;
@@ -53,22 +48,44 @@ html[data-theme="dark"] {
 
 .app-chrome {
   width: 100%;
-  max-width: var(--app-column-max-width);
+  max-width: none;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
 
+@media (min-width: 601px) {
+  .app-chrome {
+    max-width: var(--app-column-max-width);
+  }
+}
+
 .app-chrome__bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: grid;
-  grid-template-columns: 2.5rem 1fr 2.5rem;
+  grid-template-columns: 2rem 1fr 2rem;
   align-items: center;
+  gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
   flex-shrink: 0;
+  background-color: var(--color-bg, var(--background-background));
+  transition: box-shadow 0.15s ease;
+}
+
+.app-chrome__bar.is-scroll-edge--after {
+  box-shadow: var(--shadow-content-indication-after);
 }
 
 .app-chrome__menu-btn {
   justify-self: start;
+}
+
+.app-chrome__menu-btn svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: block;
 }
 
 .app-chrome__title {
@@ -78,7 +95,8 @@ html[data-theme="dark"] {
 }
 
 .app-chrome__bar-spacer {
-  width: 2.5rem;
+  width: 2rem;
+  height: 2rem;
 }
 
 .app-chrome__content {
