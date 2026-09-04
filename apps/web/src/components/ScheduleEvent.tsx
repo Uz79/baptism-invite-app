@@ -23,7 +23,7 @@ export function ScheduleEvent({ stop }: ScheduleEventProps) {
         ) : null}
       </div>
       <div className="schedule-event__action">
-        <MapLinkButton href={stop.mapsUrl} />
+        <MapLinkButton href={stop.mapsUrl} stop={stop.title} />
       </div>
     </article>
   );

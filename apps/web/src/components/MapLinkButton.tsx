@@ -1,6 +1,10 @@
+import { usePostHog } from "@posthog/react";
+
 type MapLinkButtonProps = {
   href: string;
   label?: string;
+  /** Which schedule stop this button belongs to, for analytics. */
+  stop?: string;
 };
 
 function NavigationIcon() {
@@ -17,13 +21,16 @@ function NavigationIcon() {
   );
 }
 
-export function MapLinkButton({ href, label = "Nawigacja" }: MapLinkButtonProps) {
+export function MapLinkButton({ href, label = "Nawigacja", stop }: MapLinkButtonProps) {
+  const posthog = usePostHog();
+
   return (
     <a
       className="map-link-button uz-btn uz-btn--sm uz-btn--tonal"
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() => posthog?.capture("map_link_clicked", { stop })}
     >
       <span className="map-link-button__label">{label}</span>
       <NavigationIcon />

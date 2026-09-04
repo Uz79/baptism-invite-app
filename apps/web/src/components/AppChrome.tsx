@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { IconButton } from "@cartography-lab/ui";
+import { usePostHog } from "@posthog/react";
 
 type AppChromeProps = {
   title: string;
@@ -21,6 +22,8 @@ function MenuIcon() {
 }
 
 export function AppChrome({ title, onThemeOpen, children }: AppChromeProps) {
+  const posthog = usePostHog();
+
   return (
     <div className="app-chrome">
       <header className="app-chrome__bar">
@@ -28,7 +31,10 @@ export function AppChrome({ title, onThemeOpen, children }: AppChromeProps) {
           size="sm"
           className="app-chrome__menu-btn"
           aria-label="Open settings"
-          onClick={onThemeOpen}
+          onClick={() => {
+            posthog?.capture("settings_opened");
+            onThemeOpen();
+          }}
         >
           <MenuIcon />
         </IconButton>

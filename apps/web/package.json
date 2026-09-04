@@ -13,8 +13,10 @@
   "dependencies": {
     "@cartography-lab/tokens": "0.5.0",
     "@cartography-lab/ui": "0.5.0",
+    "@posthog/react": "^1.10.5",
     "@vercel/blob": "^2.8.0",
     "@vercel/node": "^3.2.29",
+    "posthog-js": "^1.426.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0"

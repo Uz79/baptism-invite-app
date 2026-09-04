@@ -1,13 +1,38 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import posthog from "posthog-js";
+import { PostHogProvider } from "@posthog/react";
 import App from "./App";
 import "@cartography-lab/tokens";
 import "@cartography-lab/ui/styles.css";
 import "./styles/app.css";
 import "./styles/theme-flow.css";
 
-createRoot(document.getElementById("root")!).render(
+/**
+ * Analytics is optional. Without VITE_POSTHOG_KEY nothing is initialised, the
+ * provider is skipped, and every usePostHog() call resolves to undefined — so
+ * the capture calls in components no-op safely.
+ *
+ * cookieless_mode + person_profiles:"never" means no cookies, no localStorage
+ * and no stored identifiers, so guests need no consent banner.
+ */
+const posthogKey = import.meta.env.VITE_POSTHOG_KEY;
+
+if (posthogKey) {
+  posthog.init(posthogKey, {
+    api_host: import.meta.env.VITE_POSTHOG_HOST ?? "https://eu.i.posthog.com",
+    defaults: "2026-05-30",
+    cookieless_mode: "always",
+    person_profiles: "never",
+  });
+}
+
+const tree = (
   <StrictMode>
     <App />
   </StrictMode>
+);
+
+createRoot(document.getElementById("root")!).render(
+  posthogKey ? <PostHogProvider client={posthog}>{tree}</PostHogProvider> : tree
 );
