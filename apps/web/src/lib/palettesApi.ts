@@ -1,4 +1,4 @@
-import type { SavedTheme } from "./themeColors";
+import { withDisplayNames, type SavedTheme } from "./themeColors";
 import { getStoredAdminToken } from "./access";
 import { SEED_PALETTES } from "../data/seedPalettes";
 
@@ -18,12 +18,12 @@ export async function fetchPalettes(): Promise<SavedTheme[]> {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = (await res.json()) as { palettes?: SavedTheme[] };
     if (Array.isArray(data.palettes) && data.palettes.length > 0) {
-      return data.palettes;
+      return withDisplayNames(data.palettes);
     }
   } catch {
     /* fall through to seed */
   }
-  return SEED_PALETTES;
+  return withDisplayNames(SEED_PALETTES);
 }
 
 export async function createPalette(palette: SavedTheme): Promise<SavedTheme[]> {
@@ -36,7 +36,7 @@ export async function createPalette(palette: SavedTheme): Promise<SavedTheme[]> 
   if (!res.ok) {
     throw new Error(data.error || `Save failed (${res.status})`);
   }
-  return data.palettes ?? [];
+  return withDisplayNames(data.palettes ?? []);
 }
 
 export async function deletePalette(id: string): Promise<SavedTheme[]> {
@@ -48,5 +48,5 @@ export async function deletePalette(id: string): Promise<SavedTheme[]> {
   if (!res.ok) {
     throw new Error(data.error || `Delete failed (${res.status})`);
   }
-  return data.palettes ?? [];
+  return withDisplayNames(data.palettes ?? []);
 }

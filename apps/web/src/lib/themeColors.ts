@@ -2001,17 +2001,30 @@ export function writeSavedThemes(list: SavedTheme[]): void {
   }
 }
 
-export function nextThemeName(existing: SavedTheme[]): string {
-  const used = new Set(existing.map((t) => t.name));
-  for (let i = 0; i < 26; i += 1) {
-    const name = `Paleta ${String.fromCharCode(65 + i)}`;
-    if (!used.has(name)) return name;
-  }
-  for (let i = 1; i < 100; i += 1) {
-    const name = `Paleta ${i}`;
-    if (!used.has(name)) return name;
-  }
-  return "Paleta";
+/** Display label for the nth palette of a kind: "mono A", "multi C", … */
+export function paletteLabel(kind: ThemeKind, index: number): string {
+  const prefix = kind === "monochrome" ? "mono" : "multi";
+  return `${prefix} ${index < 26 ? String.fromCharCode(65 + index) : String(index + 1)}`;
+}
+
+/**
+ * Relabel a list so each palette is named by its position within its own kind.
+ * Applied on every read, so palettes stored under the older "Paleta X" scheme
+ * display correctly without needing a migration of the shared store.
+ */
+export function withDisplayNames(list: SavedTheme[]): SavedTheme[] {
+  let mono = 0;
+  let multi = 0;
+  return list.map((p) => {
+    const kind = p.kind ?? "multicolor";
+    const index = kind === "monochrome" ? mono++ : multi++;
+    return { ...p, name: paletteLabel(kind, index) };
+  });
+}
+
+export function nextThemeName(existing: SavedTheme[], kind: ThemeKind = "multicolor"): string {
+  const sameKind = existing.filter((t) => (t.kind ?? "multicolor") === kind);
+  return paletteLabel(kind, sameKind.length);
 }
 
 export function makeThemeId(): string {

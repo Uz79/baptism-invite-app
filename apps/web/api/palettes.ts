@@ -63,7 +63,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return;
       }
       const list = await loadPalettes();
-      const next = [palette, ...list.filter((p) => p.id !== palette.id)];
+      // Append: new palettes land at the end of their carousel, not the front.
+      const next = [...list.filter((p) => p.id !== palette.id), palette];
       const result = await savePalettes(next);
       if (!result.ok) {
         sendJson(res, 503, { error: result.error });

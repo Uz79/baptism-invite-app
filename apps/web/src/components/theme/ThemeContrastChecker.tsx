@@ -226,6 +226,8 @@ type PaletteCarouselProps = {
   theme: Theme;
   settings: ThemeSettings;
   activePaletteId: string | null;
+  /** Palette to bring into view — the one just added. */
+  focusId: string | null;
   busy: boolean;
   onApply: (t: SavedTheme) => void;
   onDelete: (t: SavedTheme) => void;
@@ -237,6 +239,7 @@ function PaletteCarousel({
   theme,
   settings,
   activePaletteId,
+  focusId,
   busy,
   onApply,
   onDelete,
@@ -245,15 +248,28 @@ function PaletteCarousel({
   const headId = items[0]?.id ?? null;
 
   /**
-   * Reset the scroll position whenever the head of the list changes — a save,
-   * a delete, or a refetch on reopen. Without this the browser keeps the old
-   * scrollLeft and a newly prepended palette stays parked off-screen left,
-   * which makes the admin list look like it is missing palettes the guest
-   * picker is showing.
+   * New palettes are appended, so the one you just saved sits off-screen to the
+   * right. Scroll it into view when it appears. Otherwise reset to the start
+   * whenever the head of the list changes (a delete, or a refetch on reopen),
+   * since the browser would otherwise keep a stale scrollLeft.
    */
   useLayoutEffect(() => {
+    const box = ref.current;
+    if (!box) return;
+    if (focusId) {
+      const el = box.querySelector<HTMLElement>(`[data-palette-id="${focusId}"]`);
+      if (el) {
+        const delta = el.getBoundingClientRect().left - box.getBoundingClientRect().left;
+        box.scrollBy({ left: delta, behavior: "smooth" });
+        return;
+      }
+    }
+  }, [focusId, items.length]);
+
+  useLayoutEffect(() => {
+    if (focusId) return;
     ref.current?.scrollTo({ left: 0, behavior: "auto" });
-  }, [headId]);
+  }, [headId, focusId]);
 
   return (
     <div className="cc-saved__group">
@@ -274,7 +290,12 @@ function PaletteCarousel({
               tSettings.primaryIndex === settings.primaryIndex;
             const selected = activePaletteId ? t.id === activePaletteId : matchesLive;
             return (
-              <div key={t.id} className="palette-carousel__item" role="listitem">
+              <div
+                key={t.id}
+                className="palette-carousel__item"
+                role="listitem"
+                data-palette-id={t.id}
+              >
                 <div
                   className={`cc-theme-card${selected ? " cc-theme-card--selected" : ""}`}
                   role="button"
@@ -357,6 +378,7 @@ export function ThemeContrastChecker({
   const [paletteError, setPaletteError] = useState<string | null>(null);
   const [paletteBusy, setPaletteBusy] = useState(false);
   const [activePaletteId, setActivePaletteId] = useState<string | null>(null);
+  const [focusPaletteId, setFocusPaletteId] = useState<string | null>(null);
 
   const syncFromLive = useCallback(() => {
     const saved = readSavedOverride();
@@ -536,17 +558,19 @@ export function ThemeContrastChecker({
       const live = readSavedOverride();
       const themeCard: SavedTheme = {
         id: makeThemeId(),
-        name: nextThemeName(savedThemes),
+        name: nextThemeName(savedThemes, settings.kind),
         ...derived,
         ...(live?.contrastByShell ? { contrastByShell: live.contrastByShell } : {}),
         ...(live?.primaryByShell ? { primaryByShell: live.primaryByShell } : {}),
         createdAt: Date.now(),
       };
       const next = await createPalette(themeCard);
-      const prepended = [themeCard, ...next.filter((p) => p.id !== themeCard.id)];
-      setSavedThemes(prepended);
-      setActivePaletteId(themeCard.id);
-      applySaved(themeCard);
+      const list = next.length > 0 ? next : [...savedThemes, themeCard];
+      const stored = list.find((p) => p.id === themeCard.id) ?? themeCard;
+      setSavedThemes(list);
+      setActivePaletteId(stored.id);
+      setFocusPaletteId(stored.id);
+      applySaved(stored);
     } catch (err) {
       setPaletteError(err instanceof Error ? err.message : "Could not save palette.");
     } finally {
@@ -559,6 +583,7 @@ export function ThemeContrastChecker({
     setPaletteBusy(true);
     setPaletteError(null);
     try {
+      setFocusPaletteId(null);
       const next = await deletePalette(deleteTarget.id);
       setSavedThemes(next);
       setDeleteTarget(null);
@@ -774,6 +799,9 @@ export function ThemeContrastChecker({
           theme={theme}
           settings={settings}
           activePaletteId={activePaletteId}
+          focusId={
+            monochromePalettes.some((p) => p.id === focusPaletteId) ? focusPaletteId : null
+          }
           busy={paletteBusy}
           onApply={applySaved}
           onDelete={setDeleteTarget}
@@ -785,6 +813,9 @@ export function ThemeContrastChecker({
           theme={theme}
           settings={settings}
           activePaletteId={activePaletteId}
+          focusId={
+            multicolorPalettes.some((p) => p.id === focusPaletteId) ? focusPaletteId : null
+          }
           busy={paletteBusy}
           onApply={applySaved}
           onDelete={setDeleteTarget}
