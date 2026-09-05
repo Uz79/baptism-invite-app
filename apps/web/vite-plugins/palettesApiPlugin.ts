@@ -7,6 +7,8 @@ import {
   type StoredPalette,
 } from "../server/paletteStore";
 import { loadActiveTheme, saveActiveTheme } from "../server/activeThemeStore";
+import { loadStats, recordStats, type StatsEvent } from "../server/statsStore";
+import { loadStatsFromPostHog, posthogConfigured } from "../server/posthogStats";
 
 function send(res: Connect.ServerResponse, status: number, body: unknown) {
   res.statusCode = status;
@@ -100,6 +102,65 @@ export function palettesApiPlugin(): Plugin {
                 return;
               }
               send(res, 200, { activeTheme });
+              return;
+            }
+            send(res, 405, { error: "Method not allowed" });
+          } catch (err) {
+            send(res, 500, {
+              error: err instanceof Error ? err.message : "Server error",
+            });
+          }
+          return;
+        }
+
+        if (pathOnly === "/api/stats") {
+          try {
+            if (req.method === "OPTIONS") {
+              res.statusCode = 204;
+              res.end();
+              return;
+            }
+            if (req.method === "GET") {
+              if (!isAuthorized(req.headers.authorization)) {
+                send(res, 401, { error: "Unauthorized" });
+                return;
+              }
+              if (posthogConfigured()) {
+                try {
+                  send(res, 200, { stats: await loadStatsFromPostHog(30), source: "posthog", days: 30 });
+                  return;
+                } catch (err) {
+                  send(res, 200, {
+                    stats: await loadStats(),
+                    source: "counters",
+                    warning: err instanceof Error ? err.message : "PostHog query failed",
+                  });
+                  return;
+                }
+              }
+              send(res, 200, { stats: await loadStats(), source: "counters" });
+              return;
+            }
+            if (req.method === "POST") {
+              const b = (await readJson(req)) as Record<string, unknown> | null;
+              let event: StatsEvent | null = null;
+              if (b && b.type === "invite_opened") {
+                event = { type: "invite_opened" };
+              } else if (b && b.type === "palette_selected" && typeof b.paletteId === "string") {
+                event = {
+                  type: "palette_selected",
+                  paletteId: b.paletteId,
+                  shell: b.shell === "dark" ? "dark" : b.shell === "light" ? "light" : undefined,
+                };
+              } else if (b && b.type === "nav_clicked" && typeof b.stop === "string") {
+                event = { type: "nav_clicked", stop: b.stop };
+              }
+              if (!event) {
+                send(res, 400, { error: "Invalid event" });
+                return;
+              }
+              await recordStats(event);
+              send(res, 202, { ok: true });
               return;
             }
             send(res, 405, { error: "Method not allowed" });

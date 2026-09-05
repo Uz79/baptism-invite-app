@@ -5,3 +5,9 @@ apps/web/.env.local
 .DS_Store
 *.local
 vite.config.ts.timestamp-*
+
+# Local dev store (palettes + stats). Rewritten by `npm run dev`; never read in production.
+apps/web/data/
+
+# Screenshots delivered into the chat; saved here by the Claude desktop app.
+Claude outputs/

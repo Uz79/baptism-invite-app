@@ -4,6 +4,10 @@ import { BaptismInvitePage } from "./pages/BaptismInvitePage";
 import { ThemeFlowOverlay } from "./components/theme/ThemeFlowOverlay";
 import { ThemeContrastChecker } from "./components/theme/ThemeContrastChecker";
 import { GuestThemePicker } from "./components/theme/GuestThemePicker";
+import { usePostHog } from "@posthog/react";
+import { recordEvent } from "./lib/statsApi";
+import { AdminShell } from "./components/admin/AdminShell";
+import { StatisticsPage } from "./pages/StatisticsPage";
 import {
   applyThemeChoice,
   bootColorOverride,
@@ -137,11 +141,16 @@ function AppContent() {
   });
   const [themeFlowOpen, setThemeFlowOpen] = useState(false);
   const [themeSyncKey, setThemeSyncKey] = useState(0);
+  const posthog = usePostHog();
   const [accessMode, setAccessMode] = useState<AccessMode>("guest");
   const [accessReady, setAccessReady] = useState(false);
   const [guestSelected, setGuestSelected] = useState<SavedTheme | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const adminConfirmRef = useRef<(() => Promise<void>) | null>(null);
+
+  useEffect(() => {
+    recordEvent({ type: "invite_opened" });
+  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -259,7 +268,15 @@ function AppContent() {
     const pair = pairFromSettings(settingsFromPair(guestSelected, theme), theme);
     saveOverride({ ...pair, shell: theme });
     setGuestPaletteId(guestSelected.id);
-  }, [guestSelected, theme]);
+    // Counted by id, never by name — palette labels are positional and shift on delete.
+    recordEvent({ type: "palette_selected", paletteId: guestSelected.id, shell: theme });
+    posthog?.capture("palette_selected", {
+      paletteId: guestSelected.id,
+      paletteName: guestSelected.name,
+      kind: guestSelected.kind ?? "multicolor",
+      shell: theme,
+    });
+  }, [guestSelected, theme, posthog]);
 
   const confirmAdminTheme = useCallback(async () => {
     setConfirmError(null);
@@ -280,7 +297,46 @@ function AppContent() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<BaptismInvitePage onThemeOpen={openThemeFlow} />} />
+        <Route
+          path="/"
+          element={
+            /* Admins keep the shell on Main view, so the sidebar (and the way
+               back to Statistics) never disappears. Guests get the plain invite. */
+            !accessReady ? (
+              <BaptismInvitePage onThemeOpen={openThemeFlow} />
+            ) : isAdmin ? (
+              <AdminShell
+                title="Main view"
+                onThemeOpen={openThemeFlow}
+                theme={theme}
+                onThemeChange={handleThemeChange}
+              >
+                <BaptismInvitePage onThemeOpen={openThemeFlow} chrome={false} />
+              </AdminShell>
+            ) : (
+              <BaptismInvitePage onThemeOpen={openThemeFlow} />
+            )
+          }
+        />
+        <Route
+          path="/statistics"
+          element={
+            /* Admin only. A guest who guesses the URL gets the invite, not a 404 —
+               the statistics route should not advertise that it exists. */
+            !accessReady ? null : isAdmin ? (
+              <AdminShell
+                title="Statistics"
+                onThemeOpen={openThemeFlow}
+                theme={theme}
+                onThemeChange={handleThemeChange}
+              >
+                <StatisticsPage />
+              </AdminShell>
+            ) : (
+              <BaptismInvitePage onThemeOpen={openThemeFlow} />
+            )
+          }
+        />
       </Routes>
 
       <ThemeFlowOverlay

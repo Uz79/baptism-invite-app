@@ -1,6 +1,7 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { Button, SegmentedControl } from "@cartography-lab/ui";
 import { useScrollEdgeChrome } from "../../hooks/useScrollEdgeChrome";
+import { useSlideUpOverlay } from "../../hooks/useSlideUpOverlay";
 import type { Theme } from "../../types/theme";
 
 interface ThemeFlowOverlayProps {
@@ -15,9 +16,6 @@ interface ThemeFlowOverlayProps {
   showShellToggle?: boolean;
   children: ReactNode;
 }
-
-const OPEN_MS = 350;
-const CLOSE_MS = 280;
 
 /**
  * Banking payment-flow open/close:
@@ -44,98 +42,20 @@ export function ThemeFlowOverlay({
   const shellRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
-  const closeTimer = useRef<number | null>(null);
-  const openRaf = useRef<number | null>(null);
-  const wasOpen = useRef(false);
-
-  const [settled, setSettled] = useState(false);
+  const settled = useSlideUpOverlay({
+    open,
+    overlayRef,
+    shellRef,
+    onSettled: () => {
+      /* Keyboard / fine pointer only — a mobile focus ring clips at the edge. */
+      const finePointer =
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+      if (finePointer) closeBtnRef.current?.focus();
+    },
+  });
 
   useScrollEdgeChrome(modalRef, open && settled);
-
-  /* Init parked state once shell exists. */
-  useEffect(() => {
-    const shell = shellRef.current;
-    if (!shell) return;
-    shell.classList.add("modal-shell--offscreen", "modal-shell--no-transition");
-  }, []);
-
-  useEffect(() => {
-    const overlay = overlayRef.current;
-    const shell = shellRef.current;
-    if (!overlay || !shell) return;
-
-    const clearCloseTimer = () => {
-      if (closeTimer.current != null) {
-        window.clearTimeout(closeTimer.current);
-        closeTimer.current = null;
-      }
-    };
-    const clearOpenRaf = () => {
-      if (openRaf.current != null) {
-        cancelAnimationFrame(openRaf.current);
-        openRaf.current = null;
-      }
-    };
-
-    if (open) {
-      clearCloseTimer();
-      clearOpenRaf();
-      setSettled(false);
-
-      shell.classList.remove("modal-shell--closing");
-      shell.classList.add("modal-shell--offscreen", "modal-shell--no-transition");
-
-      overlay.classList.remove("modal-overlay--closing");
-      overlay.classList.add("modal-overlay--active");
-      document.body.classList.add("body--theme-flow-open");
-
-      /* Double rAF: paint parked shell, then enable transition + slide up. */
-      openRaf.current = requestAnimationFrame(() => {
-        openRaf.current = requestAnimationFrame(() => {
-          openRaf.current = null;
-          shell.classList.remove("modal-shell--no-transition");
-          void shell.offsetHeight;
-          shell.classList.remove("modal-shell--offscreen");
-          window.setTimeout(() => {
-            setSettled(true);
-            /* Keyboard / fine pointer only — mobile focus ring clips at the edge. */
-            const finePointer =
-              typeof window.matchMedia === "function" &&
-              window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-            if (finePointer) closeBtnRef.current?.focus();
-          }, OPEN_MS);
-        });
-      });
-
-      wasOpen.current = true;
-      return () => {
-        clearOpenRaf();
-      };
-    }
-
-    /* Close only if we were open (skip initial mount). */
-    if (!wasOpen.current && !overlay.classList.contains("modal-overlay--active")) {
-      return;
-    }
-
-    clearOpenRaf();
-    setSettled(false);
-    overlay.classList.add("modal-overlay--closing");
-    shell.classList.remove("modal-shell--offscreen", "modal-shell--no-transition");
-    shell.classList.add("modal-shell--closing");
-
-    clearCloseTimer();
-    closeTimer.current = window.setTimeout(() => {
-      closeTimer.current = null;
-      overlay.classList.remove("modal-overlay--active", "modal-overlay--closing");
-      shell.classList.remove("modal-shell--closing");
-      shell.classList.add("modal-shell--offscreen", "modal-shell--no-transition");
-      document.body.classList.remove("body--theme-flow-open");
-      wasOpen.current = false;
-    }, CLOSE_MS);
-
-    return () => clearCloseTimer();
-  }, [open]);
 
   useEffect(() => {
     if (!open) return;

@@ -1,4 +1,5 @@
 import { usePostHog } from "@posthog/react";
+import { recordEvent } from "../lib/statsApi";
 
 type MapLinkButtonProps = {
   href: string;
@@ -30,7 +31,10 @@ export function MapLinkButton({ href, label = "Nawigacja", stop }: MapLinkButton
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={() => posthog?.capture("map_link_clicked", { stop })}
+      onClick={() => {
+        posthog?.capture("map_link_clicked", { stop });
+        if (stop) recordEvent({ type: "nav_clicked", stop });
+      }}
     >
       <span className="map-link-button__label">{label}</span>
       <NavigationIcon />

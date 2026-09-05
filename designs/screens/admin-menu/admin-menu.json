@@ -1,0 +1,25 @@
+{
+  "name": "admin-menu",
+  "category": "screen",
+  "description": "Admin hamburger menu sheet — mobile light theme, two menu layouts.",
+  "figma": {
+    "file": "Des-Sys-Test",
+    "url": "https://www.figma.com/design/IKZcKBuZfweNRvRI0Ji6X3/Des-Sys-Test"
+  },
+  "assets": {
+    "variants": {
+      "menu-01": {
+        "mobile-default": {
+          "default": "variants/menu-01/mobile-default/default.svg",
+          "png": "variants/menu-01/mobile-default/default.png"
+        }
+      },
+      "menu-02": {
+        "mobile-default": {
+          "default": "variants/menu-02/mobile-default/default.svg",
+          "png": "variants/menu-02/mobile-default/default.png"
+        }
+      }
+    }
+  }
+}
