@@ -9,6 +9,11 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, "");
   if (env.ADMIN_TOKEN) process.env.ADMIN_TOKEN = env.ADMIN_TOKEN;
   if (env.BLOB_READ_WRITE_TOKEN) process.env.BLOB_READ_WRITE_TOKEN = env.BLOB_READ_WRITE_TOKEN;
+  /* Server-only PostHog credentials, so `vite dev` can serve the real
+     statistics too. These are read in the dev API plugin, never bundled. */
+  for (const key of ["POSTHOG_PERSONAL_API_KEY", "POSTHOG_PROJECT_ID", "POSTHOG_API_HOST"]) {
+    if (env[key]) process.env[key] = env[key];
+  }
 
   return {
     plugins: [react(), palettesApiPlugin()],

@@ -1,0 +1,24 @@
+{
+  "name": "statistics-admin",
+  "category": "screen",
+  "description": "Admin statistics dashboard — light theme invite engagement metrics on desktop and mobile.",
+  "figma": {
+    "file": "Des-Sys-Test",
+    "nodeId": "1215-132158",
+    "url": "https://www.figma.com/design/IKZcKBuZfweNRvRI0Ji6X3/Des-Sys-Test?node-id=1215-132158"
+  },
+  "assets": {
+    "variants": {
+      "light-theme": {
+        "desktop-default": {
+          "default": "variants/light-theme/desktop-default/default.svg",
+          "png": "variants/light-theme/desktop-default/default.png"
+        },
+        "mobile-default": {
+          "default": "variants/light-theme/mobile-default/default.svg",
+          "png": "variants/light-theme/mobile-default/default.png"
+        }
+      }
+    }
+  }
+}

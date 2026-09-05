@@ -7,6 +7,7 @@ import "@cartography-lab/tokens";
 import "@cartography-lab/ui/styles.css";
 import "./styles/app.css";
 import "./styles/theme-flow.css";
+import "./styles/admin.css";
 
 /**
  * Analytics is optional. Without VITE_POSTHOG_KEY nothing is initialised, the

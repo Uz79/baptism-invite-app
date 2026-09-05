@@ -1,4 +1,6 @@
 export type ScheduleStop = {
+  /** Stable analytics key — short and independent of the display title. */
+  key: string;
   time: string;
   title: string;
   subtitle?: string;
@@ -14,12 +16,14 @@ export const eventMeta = {
 
 export const schedule: ScheduleStop[] = [
   {
+    key: "church",
     time: "12:00",
     title: "Msza w kościele ‘Przenajświętszej Trójcy’",
     notes: ["chrzest podczas mszy"],
     mapsUrl: "https://maps.app.goo.gl/pWeiZGFvzpuqzgk9A",
   },
   {
+    key: "restaurant",
     time: "13:30",
     title: "Obiad w restauracji ‘Chopin 5’",
     notes: [
