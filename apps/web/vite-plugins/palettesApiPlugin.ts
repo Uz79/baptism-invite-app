@@ -6,6 +6,7 @@ import {
   savePalettes,
   type StoredPalette,
 } from "../server/paletteStore";
+import { loadActiveTheme, saveActiveTheme } from "../server/activeThemeStore";
 
 function send(res: Connect.ServerResponse, status: number, body: unknown) {
   res.statusCode = status;
@@ -64,6 +65,52 @@ export function palettesApiPlugin(): Plugin {
           return;
         }
 
+        if (pathOnly === "/api/active-theme") {
+          try {
+            if (req.method === "OPTIONS") {
+              res.statusCode = 204;
+              res.end();
+              return;
+            }
+            if (req.method === "GET") {
+              send(res, 200, { activeTheme: await loadActiveTheme() });
+              return;
+            }
+            if (req.method === "POST") {
+              if (!isAuthorized(req.headers.authorization)) {
+                send(res, 401, { error: "Unauthorized" });
+                return;
+              }
+              const body = (await readJson(req)) as {
+                paletteId?: string;
+                shell?: string;
+              } | null;
+              const paletteId =
+                typeof body?.paletteId === "string" ? body.paletteId.trim() : "";
+              const shell =
+                body?.shell === "dark" ? "dark" : body?.shell === "light" ? "light" : null;
+              if (!paletteId || !shell) {
+                send(res, 400, { error: "Invalid active theme" });
+                return;
+              }
+              const activeTheme = { paletteId, shell, updatedAt: Date.now() };
+              const result = await saveActiveTheme(activeTheme);
+              if (!result.ok) {
+                send(res, 503, { error: result.error });
+                return;
+              }
+              send(res, 200, { activeTheme });
+              return;
+            }
+            send(res, 405, { error: "Method not allowed" });
+          } catch (err) {
+            send(res, 500, {
+              error: err instanceof Error ? err.message : "Server error",
+            });
+          }
+          return;
+        }
+
         if (pathOnly !== "/api/palettes") {
           next();
           return;
@@ -87,7 +134,8 @@ export function palettesApiPlugin(): Plugin {
               return;
             }
             const list = await loadPalettes();
-            const next = [palette, ...list.filter((p) => p.id !== palette.id)];
+            // Append: new palettes land at the end of their carousel, not the front.
+            const next = [...list.filter((p) => p.id !== palette.id), palette];
             const result = await savePalettes(next);
             if (!result.ok) {
               send(res, 503, { error: result.error });

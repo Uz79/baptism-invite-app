@@ -4,6 +4,8 @@ import { ThemeSetColorDialog } from "./ThemeSetColorDialog";
 import { DeletePaletteDialog } from "./DeletePaletteDialog";
 import type { Theme } from "../../types/theme";
 import { createPalette, deletePalette, fetchPalettes } from "../../lib/palettesApi";
+import { getActivePaletteId, setActivePaletteId } from "../../lib/access";
+import { publishActiveTheme } from "../../lib/activeThemeApi";
 import {
   applyDerivedTokens,
   buildMonochromeSequences,
@@ -21,13 +23,13 @@ import {
   inkOnPrimaryControl,
   makeThemeId,
   nextThemeName,
+  normalizeHex,
   pairFromSettings,
   pickInvertedInk,
   readCanonicalFromTheme,
   readSavedOverride,
   saveOverride,
   settingsFromPair,
-  shellThemeFromPair,
   withShellThemeState,
   type PrimaryShellReport,
   type SavedTheme,
@@ -39,6 +41,8 @@ interface ThemeContrastCheckerProps {
   theme: Theme;
   onThemeChange: (theme: Theme) => void;
   syncKey: number;
+  /** Register admin Potwierdź → publish this palette + shell for guests. */
+  onRegisterConfirm?: (confirm: (() => Promise<void>) | null) => void;
 }
 
 type DialogTarget = "neutral" | "primary" | null;
@@ -281,14 +285,10 @@ function PaletteCarousel({
           {items.map((t) => {
             const tSettings = settingsFromPair(t, theme);
             const tPair = pairFromSettings(tSettings, theme);
-            const matchesLive =
-              tSettings.kind === settings.kind &&
-              tSettings.neutralSeed === settings.neutralSeed &&
-              tSettings.primarySeed === settings.primarySeed &&
-              tSettings.bgIndex === settings.bgIndex &&
-              tSettings.fgIndex === settings.fgIndex &&
-              tSettings.primaryIndex === settings.primaryIndex;
-            const selected = activePaletteId ? t.id === activePaletteId : matchesLive;
+            const kindMatches = (t.kind ?? "multicolor") === settings.kind;
+            const selected = Boolean(
+              kindMatches && activePaletteId && t.id === activePaletteId
+            );
             return (
               <div
                 key={t.id}
@@ -301,7 +301,10 @@ function PaletteCarousel({
                   role="button"
                   tabIndex={0}
                   aria-pressed={selected}
-                  onClick={() => onApply(t)}
+                  onClick={(e) => {
+                    onApply(t);
+                    (e.currentTarget as HTMLElement).blur();
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
@@ -364,8 +367,9 @@ function PaletteCarousel({
 
 export function ThemeContrastChecker({
   theme,
-  onThemeChange,
+  onThemeChange: _onThemeChange,
   syncKey,
+  onRegisterConfirm,
 }: ThemeContrastCheckerProps) {
   const [settings, setSettings] = useState<ThemeSettings>(() => {
     const saved = readSavedOverride();
@@ -377,8 +381,15 @@ export function ThemeContrastChecker({
   const [deleteTarget, setDeleteTarget] = useState<SavedTheme | null>(null);
   const [paletteError, setPaletteError] = useState<string | null>(null);
   const [paletteBusy, setPaletteBusy] = useState(false);
-  const [activePaletteId, setActivePaletteId] = useState<string | null>(null);
+  const [activePaletteId, setActivePaletteIdState] = useState<string | null>(() =>
+    getActivePaletteId()
+  );
   const [focusPaletteId, setFocusPaletteId] = useState<string | null>(null);
+
+  const rememberActivePalette = useCallback((id: string | null) => {
+    setActivePaletteIdState(id);
+    setActivePaletteId(id);
+  }, []);
 
   const syncFromLive = useCallback(() => {
     const saved = readSavedOverride();
@@ -400,7 +411,28 @@ export function ThemeContrastChecker({
     let cancelled = false;
     fetchPalettes()
       .then((list) => {
-        if (!cancelled) setSavedThemes(list);
+        if (cancelled) return;
+        setSavedThemes(list);
+        const remembered = getActivePaletteId();
+        if (remembered && list.some((p) => p.id === remembered)) {
+          rememberActivePalette(remembered);
+          return;
+        }
+        const saved = readSavedOverride();
+        if (!saved) return;
+        const live = settingsFromPair(saved, theme);
+        const match = list.find((t) => {
+          const tSettings = settingsFromPair(t, theme);
+          return (
+            tSettings.kind === live.kind &&
+            tSettings.neutralSeed === live.neutralSeed &&
+            tSettings.primarySeed === live.primarySeed &&
+            tSettings.bgIndex === live.bgIndex &&
+            tSettings.fgIndex === live.fgIndex &&
+            tSettings.primaryIndex === live.primaryIndex
+          );
+        });
+        if (match) rememberActivePalette(match.id);
       })
       .catch(() => {
         if (!cancelled) setPaletteError("Could not load shared palettes.");
@@ -408,7 +440,22 @@ export function ThemeContrastChecker({
     return () => {
       cancelled = true;
     };
-  }, [syncKey]);
+  }, [syncKey, theme, rememberActivePalette]);
+
+  useEffect(() => {
+    if (!onRegisterConfirm) return;
+    onRegisterConfirm(async () => {
+      const id = activePaletteId ?? getActivePaletteId();
+      if (!id) {
+        throw new Error("Wybierz paletę przed potwierdzeniem.");
+      }
+      const pair = pairFromSettings(settings, theme);
+      saveOverride({ ...pair, shell: theme });
+      await publishActiveTheme(id, theme);
+      rememberActivePalette(id);
+    });
+    return () => onRegisterConfirm(null);
+  }, [onRegisterConfirm, activePaletteId, settings, theme, rememberActivePalette]);
 
   const monochromePalettes = useMemo(
     () => savedThemes.filter((t) => (t.kind ?? "multicolor") === "monochrome"),
@@ -525,19 +572,37 @@ export function ThemeContrastChecker({
         neutralSeed: clampedPair.neutralSeed,
         primarySeed: clampedPair.primarySeed,
       });
-      if (persist) saveOverride(clampedPair);
+      if (persist) saveOverride({ ...clampedPair, shell: theme });
       if (syncShell) {
-        const shell = shellThemeFromPair(clampedPair.bg, clampedPair.fg);
-        if (shell !== theme) onThemeChange(shell);
-        else document.documentElement.dataset.theme = shell;
+        /* Shell is only changed by Jasne/Ciemne — never infer from luminance. */
+        document.documentElement.dataset.theme = theme;
       }
     },
-    [onThemeChange, theme]
+    [theme]
   );
 
   const setKind = (kind: ThemeKind) => {
     if (kind === settings.kind) return;
-    commitSettings({ ...settings, kind });
+    const nextSettings = { ...settings, kind };
+    commitSettings(nextSettings);
+
+    /* Clear palette selection on kind change unless a saved palette of the new
+       kind already shares this exact neutral background + foreground. */
+    const live = pairFromSettings(nextSettings, theme);
+    const liveBg = normalizeHex(live.bg);
+    const liveNeutral = normalizeHex(live.neutral ?? live.fg);
+    const match =
+      liveBg && liveNeutral
+        ? savedThemes.find((t) => {
+            if ((t.kind ?? "multicolor") !== kind) return false;
+            const tPair = pairFromSettings(settingsFromPair(t, theme), theme);
+            return (
+              normalizeHex(tPair.bg) === liveBg &&
+              normalizeHex(tPair.neutral ?? tPair.fg) === liveNeutral
+            );
+          })
+        : undefined;
+    rememberActivePalette(match?.id ?? null);
   };
 
   const reset = () => {
@@ -546,7 +611,7 @@ export function ThemeContrastChecker({
   };
 
   const applySaved = (t: SavedTheme) => {
-    setActivePaletteId(t.id);
+    rememberActivePalette(t.id);
     commitSettings(settingsFromPair(t, theme));
   };
 
@@ -568,7 +633,7 @@ export function ThemeContrastChecker({
       const list = next.length > 0 ? next : [...savedThemes, themeCard];
       const stored = list.find((p) => p.id === themeCard.id) ?? themeCard;
       setSavedThemes(list);
-      setActivePaletteId(stored.id);
+      rememberActivePalette(stored.id);
       setFocusPaletteId(stored.id);
       applySaved(stored);
     } catch (err) {

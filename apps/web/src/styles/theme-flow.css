@@ -1482,8 +1482,12 @@ body.body--theme-flow-open {
 }
 
 .cc-theme-card--selected {
-  border: 2px solid var(--color-fg-interactive);
-  padding: calc(0.75rem - 1px);
+  border-color: var(--color-fg-interactive);
+  box-shadow: inset 0 0 0 1px var(--color-fg-interactive);
+}
+
+.cc-theme-card--selected:focus-visible {
+  outline: none;
 }
 
 .cc-theme-card__header {
@@ -1646,8 +1650,12 @@ body.body--theme-flow-open {
 }
 
 .guest-palette-card--selected {
-  border: 2px solid var(--color-fg-interactive);
-  padding: calc(0.75rem - 1px);
+  border-color: var(--color-fg-interactive);
+  box-shadow: inset 0 0 0 1px var(--color-fg-interactive);
+}
+
+.guest-palette-card--selected:focus-visible {
+  outline: none;
 }
 
 .guest-palette-card__title {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { BaptismInvitePage } from "./pages/BaptismInvitePage";
 import { ThemeFlowOverlay } from "./components/theme/ThemeFlowOverlay";
@@ -10,9 +10,9 @@ import {
   clearDerivedTokens,
   pairFromSettings,
   readSavedOverride,
+  resolveShell,
   saveOverride,
   settingsFromPair,
-  shellThemeFromPair,
   applyDerivedTokens,
   hexToRgb,
   normalizeHex,
@@ -27,6 +27,7 @@ import {
   type AccessMode,
 } from "./lib/access";
 import { fetchPalettes } from "./lib/palettesApi";
+import { fetchActiveTheme } from "./lib/activeThemeApi";
 import type { Theme } from "./types/theme";
 
 const booted = bootColorOverride();
@@ -77,6 +78,18 @@ function findDefaultGuestPalette(list: SavedTheme[]): SavedTheme | null {
   );
 }
 
+function applyPaletteShell(palette: SavedTheme, shell: Theme) {
+  const settings = settingsFromPair(palette, shell);
+  const pair = pairFromSettings(settings, shell);
+  applyDerivedTokens(pair.bg, pair.fg, pair.neutral, pair.kind, {
+    neutralSeed: pair.neutralSeed,
+    primarySeed: pair.primarySeed,
+  });
+  saveOverride({ ...pair, shell });
+  document.documentElement.dataset.theme = shell;
+  return pair;
+}
+
 /** Match the live invite colors to a saved palette; default multi F + light. */
 function resolveGuestPalette(
   list: SavedTheme[],
@@ -119,7 +132,7 @@ function resolveGuestPalette(
 
 function AppContent() {
   const [theme, setTheme] = useState<Theme>(() => {
-    if (booted) return shellThemeFromPair(booted.bg, booted.fg);
+    if (booted) return resolveShell(booted);
     return "light";
   });
   const [themeFlowOpen, setThemeFlowOpen] = useState(false);
@@ -127,6 +140,8 @@ function AppContent() {
   const [accessMode, setAccessMode] = useState<AccessMode>("guest");
   const [accessReady, setAccessReady] = useState(false);
   const [guestSelected, setGuestSelected] = useState<SavedTheme | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const adminConfirmRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -163,27 +178,33 @@ function AppContent() {
   useEffect(() => {
     if (!accessReady || accessMode !== "guest") return;
     let cancelled = false;
-    fetchPalettes().then((list) => {
+    (async () => {
+      const [list, published] = await Promise.all([fetchPalettes(), fetchActiveTheme()]);
       if (cancelled) return;
+
       const rememberedId = getGuestPaletteId();
+      const publishedHit = published
+        ? list.find((p) => p.id === published.paletteId)
+        : null;
       const hit = rememberedId
-        ? list.find((p) => p.id === rememberedId)
-        : findDefaultGuestPalette(list);
+        ? list.find((p) => p.id === rememberedId) ??
+          publishedHit ??
+          findDefaultGuestPalette(list)
+        : publishedHit ?? findDefaultGuestPalette(list);
       if (!hit) return;
 
-      /* Default guest shell is Jasne; only infer shell from a remembered pick. */
-      const shell: Theme = rememberedId ? shellThemeFromPair(hit.bg, hit.fg) : "light";
-      const settings = settingsFromPair(hit, shell);
-      const pair = pairFromSettings(settings, shell);
-      applyDerivedTokens(pair.bg, pair.fg, pair.neutral, pair.kind, {
-        neutralSeed: pair.neutralSeed,
-        primarySeed: pair.primarySeed,
-      });
-      saveOverride(pair);
+      /* Guest default: admin-published shell, else Jasne. Own confirm keeps shell from override. */
+      const saved = readSavedOverride();
+      const shell: Theme = rememberedId
+        ? saved
+          ? resolveShell(saved)
+          : published?.shell ?? "light"
+        : published?.shell ?? "light";
+
+      applyPaletteShell(hit, shell);
       setGuestSelected(hit);
       setTheme(shell);
-      document.documentElement.dataset.theme = shell;
-    });
+    })();
     return () => {
       cancelled = true;
     };
@@ -193,12 +214,7 @@ function AppContent() {
     (next: Theme) => {
       setTheme((current) => {
         if (accessMode === "guest" && guestSelected) {
-          const settings = settingsFromPair(guestSelected, next);
-          const pair = pairFromSettings(settings, next);
-          applyDerivedTokens(pair.bg, pair.fg, pair.neutral, pair.kind, {
-            neutralSeed: pair.neutralSeed,
-            primarySeed: pair.primarySeed,
-          });
+          applyPaletteShell(guestSelected, next);
         } else {
           const saved = readSavedOverride();
           if (saved) {
@@ -216,6 +232,7 @@ function AppContent() {
   );
 
   const openThemeFlow = useCallback(() => {
+    setConfirmError(null);
     setThemeFlowOpen(true);
     setThemeSyncKey((k) => k + 1);
     if (accessMode !== "guest") return;
@@ -232,28 +249,31 @@ function AppContent() {
   const applyGuestPalette = useCallback(
     (palette: SavedTheme) => {
       setGuestSelected(palette);
-      const settings = settingsFromPair(palette, theme);
-      const pair = pairFromSettings(settings, theme);
-      applyDerivedTokens(pair.bg, pair.fg, pair.neutral, pair.kind, {
-        neutralSeed: pair.neutralSeed,
-        primarySeed: pair.primarySeed,
-      });
-      const shell = shellThemeFromPair(pair.bg, pair.fg);
-      if (shell !== theme) {
-        setTheme(shell);
-        document.documentElement.dataset.theme = shell;
-      }
+      applyPaletteShell(palette, theme);
     },
     [theme]
   );
 
   const confirmGuestPalette = useCallback(() => {
     if (!guestSelected) return;
-    const settings = settingsFromPair(guestSelected, theme);
-    const pair = pairFromSettings(settings, theme);
-    saveOverride(pair);
+    const pair = pairFromSettings(settingsFromPair(guestSelected, theme), theme);
+    saveOverride({ ...pair, shell: theme });
     setGuestPaletteId(guestSelected.id);
   }, [guestSelected, theme]);
+
+  const confirmAdminTheme = useCallback(async () => {
+    setConfirmError(null);
+    try {
+      const run = adminConfirmRef.current;
+      if (!run) {
+        throw new Error("Wybierz paletę przed potwierdzeniem.");
+      }
+      await run();
+    } catch (err) {
+      setConfirmError(err instanceof Error ? err.message : "Nie udało się zapisać motywu.");
+      throw err;
+    }
+  }, []);
 
   const isAdmin = accessMode === "admin";
 
@@ -272,14 +292,24 @@ function AppContent() {
         title={isAdmin ? "Nastawienia" : "Wybierz kolory"}
         confirmLabel="Potwierdź"
         confirmDisabled={!isAdmin && !guestSelected}
-        onConfirm={isAdmin ? undefined : confirmGuestPalette}
+        onConfirm={isAdmin ? confirmAdminTheme : confirmGuestPalette}
       >
         {isAdmin ? (
-          <ThemeContrastChecker
-            theme={theme}
-            onThemeChange={handleThemeChange}
-            syncKey={themeSyncKey}
-          />
+          <>
+            <ThemeContrastChecker
+              theme={theme}
+              onThemeChange={handleThemeChange}
+              syncKey={themeSyncKey}
+              onRegisterConfirm={(fn) => {
+                adminConfirmRef.current = fn;
+              }}
+            />
+            {confirmError ? (
+              <p className="cc-saved__error" role="alert">
+                {confirmError}
+              </p>
+            ) : null}
+          </>
         ) : (
           <GuestThemePicker
             theme={theme}

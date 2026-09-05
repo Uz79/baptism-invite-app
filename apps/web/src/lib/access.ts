@@ -1,5 +1,6 @@
 const ADMIN_TOKEN_KEY = "baptismInviteAdminToken";
 const GUEST_PALETTE_KEY = "baptismInviteGuestPaletteId";
+const ACTIVE_PALETTE_KEY = "baptismInviteActivePaletteId";
 
 export type AccessMode = "admin" | "guest";
 
@@ -48,6 +49,24 @@ export function getGuestPaletteId(): string | null {
 export function setGuestPaletteId(id: string): void {
   try {
     localStorage.setItem(GUEST_PALETTE_KEY, id);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Last palette id applied in admin (survives Light/Dark shell swaps). */
+export function getActivePaletteId(): string | null {
+  try {
+    return localStorage.getItem(ACTIVE_PALETTE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setActivePaletteId(id: string | null): void {
+  try {
+    if (!id) localStorage.removeItem(ACTIVE_PALETTE_KEY);
+    else localStorage.setItem(ACTIVE_PALETTE_KEY, id);
   } catch {
     /* ignore */
   }
