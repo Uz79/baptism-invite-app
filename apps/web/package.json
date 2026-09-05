@@ -8,7 +8,7 @@
     "prebuild": "node ../../scripts/build-tokens.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.server.json"
   },
   "dependencies": {
     "@cartography-lab/tokens": "0.5.0",

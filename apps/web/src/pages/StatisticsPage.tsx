@@ -159,7 +159,7 @@ export function StatisticsPage() {
 
       <div className="stack-stats">
         <StatCard label="Invites open" value={stats.opens} note="Individual openings" />
-        <StatCard label="Chosen palettes" value={totalPicks} note="Confirmed changes" />
+        <StatCard label="Chosen palettes" value={totalPicks} note="Guest Potwierdź only" />
         <StatCard label="Clicked navigation" value={navTotal} note="Church and restaurant" />
         <StatCard
           label="Guests without changes"

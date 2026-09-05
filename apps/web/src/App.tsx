@@ -82,14 +82,14 @@ function findDefaultGuestPalette(list: SavedTheme[]): SavedTheme | null {
   );
 }
 
-function applyPaletteShell(palette: SavedTheme, shell: Theme) {
+function applyPaletteShell(palette: SavedTheme, shell: Theme, scope: "guest" | "admin" = "guest") {
   const settings = settingsFromPair(palette, shell);
   const pair = pairFromSettings(settings, shell);
   applyDerivedTokens(pair.bg, pair.fg, pair.neutral, pair.kind, {
     neutralSeed: pair.neutralSeed,
     primarySeed: pair.primarySeed,
   });
-  saveOverride({ ...pair, shell });
+  saveOverride({ ...pair, shell }, scope);
   document.documentElement.dataset.theme = shell;
   return pair;
 }
@@ -107,7 +107,7 @@ function resolveGuestPalette(
   }
   if (current && list.some((p) => p.id === current.id)) return current;
 
-  const saved = readSavedOverride();
+  const saved = readSavedOverride("guest");
   const liveBg = saved?.bg || cssVar("--color-bg") || cssVar("--background-background");
   const liveAccent = saved?.fg || cssVar("--color-fg-interactive");
   const liveNeutral =
@@ -157,10 +157,10 @@ function AppContent() {
   }, [theme]);
 
   useEffect(() => {
-    if (!readSavedOverride()) {
+    if (!readSavedOverride(accessMode === "admin" ? "admin" : "guest")) {
       clearDerivedTokens();
     }
-  }, []);
+  }, [accessMode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -184,6 +184,35 @@ function AppContent() {
     };
   }, []);
 
+  /* Admin: own draft, else published site theme — never the guest localStorage pick. */
+  useEffect(() => {
+    if (!accessReady || accessMode !== "admin") return;
+    let cancelled = false;
+    (async () => {
+      const draft = readSavedOverride("admin");
+      if (draft) {
+        const shell = resolveShell(draft);
+        applyDerivedTokens(draft.bg, draft.fg, draft.neutral, draft.kind, {
+          neutralSeed: draft.neutralSeed,
+          primarySeed: draft.primarySeed,
+        });
+        document.documentElement.dataset.theme = shell;
+        setTheme(shell);
+        return;
+      }
+
+      const [list, published] = await Promise.all([fetchPalettes(), fetchActiveTheme()]);
+      if (cancelled || !published) return;
+      const hit = list.find((p) => p.id === published.paletteId);
+      if (!hit) return;
+      applyPaletteShell(hit, published.shell, "admin");
+      setTheme(published.shell);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [accessReady, accessMode]);
+
   useEffect(() => {
     if (!accessReady || accessMode !== "guest") return;
     let cancelled = false;
@@ -202,15 +231,14 @@ function AppContent() {
         : publishedHit ?? findDefaultGuestPalette(list);
       if (!hit) return;
 
-      /* Guest default: admin-published shell, else Jasne. Own confirm keeps shell from override. */
-      const saved = readSavedOverride();
+      const saved = readSavedOverride("guest");
       const shell: Theme = rememberedId
         ? saved
           ? resolveShell(saved)
           : published?.shell ?? "light"
         : published?.shell ?? "light";
 
-      applyPaletteShell(hit, shell);
+      applyPaletteShell(hit, shell, "guest");
       setGuestSelected(hit);
       setTheme(shell);
     })();
@@ -223,11 +251,12 @@ function AppContent() {
     (next: Theme) => {
       setTheme((current) => {
         if (accessMode === "guest" && guestSelected) {
-          applyPaletteShell(guestSelected, next);
+          applyPaletteShell(guestSelected, next, "guest");
         } else {
-          const saved = readSavedOverride();
+          const scope = accessMode === "admin" ? "admin" : "guest";
+          const saved = readSavedOverride(scope);
           if (saved) {
-            applyThemeChoice(next, saved, current);
+            applyThemeChoice(next, saved, current, scope);
           } else {
             clearDerivedTokens();
             document.documentElement.dataset.theme = next;
@@ -258,7 +287,7 @@ function AppContent() {
   const applyGuestPalette = useCallback(
     (palette: SavedTheme) => {
       setGuestSelected(palette);
-      applyPaletteShell(palette, theme);
+      applyPaletteShell(palette, theme, "guest");
     },
     [theme]
   );
@@ -266,16 +295,20 @@ function AppContent() {
   const confirmGuestPalette = useCallback(() => {
     if (!guestSelected) return;
     const pair = pairFromSettings(settingsFromPair(guestSelected, theme), theme);
-    saveOverride({ ...pair, shell: theme });
+    saveOverride({ ...pair, shell: theme }, "guest");
     setGuestPaletteId(guestSelected.id);
     // Counted by id, never by name — palette labels are positional and shift on delete.
     recordEvent({ type: "palette_selected", paletteId: guestSelected.id, shell: theme });
-    posthog?.capture("palette_selected", {
-      paletteId: guestSelected.id,
-      paletteName: guestSelected.name,
-      kind: guestSelected.kind ?? "multicolor",
-      shell: theme,
-    });
+    posthog?.capture(
+      "palette_selected",
+      {
+        paletteId: guestSelected.id,
+        paletteName: guestSelected.name,
+        kind: guestSelected.kind ?? "multicolor",
+        shell: theme,
+      },
+      { send_instantly: true }
+    );
   }, [guestSelected, theme, posthog]);
 
   const confirmAdminTheme = useCallback(async () => {

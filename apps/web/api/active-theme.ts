@@ -1,6 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { isAuthorized } from "../server/paletteStore.js";
-import { loadActiveTheme, saveActiveTheme } from "../server/activeThemeStore.js";
+import {
+  loadActiveTheme,
+  saveActiveTheme,
+  type ActiveTheme,
+} from "../server/activeThemeStore.js";
 
 function sendJson(res: VercelResponse, status: number, body: unknown) {
   res.statusCode = status;
@@ -61,7 +65,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         sendJson(res, 400, { error: "Invalid active theme" });
         return;
       }
-      const activeTheme = { paletteId, shell, updatedAt: Date.now() };
+      /* Annotated: without it the literal-typed `shell` widens to string
+         in the object literal and no longer matches ActiveTheme. */
+      const activeTheme: ActiveTheme = { paletteId, shell, updatedAt: Date.now() };
       const result = await saveActiveTheme(activeTheme);
       if (!result.ok) {
         sendJson(res, 503, { error: result.error });

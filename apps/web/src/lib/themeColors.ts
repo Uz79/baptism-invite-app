@@ -84,7 +84,17 @@ export const DEFAULT_NEUTRAL_SEED = "#3b3d42";
 export const DEFAULT_PRIMARY_SEED = "#00157e";
 
 export const OVERRIDE_KEY = "uzMapsColorOverride_v11";
+/** Guest personal theme — must not leak into the admin session. */
+export const GUEST_OVERRIDE_KEY = "baptismInviteGuestOverride_v01";
+/** Admin draft / live editor — separate from guest picks. */
+export const ADMIN_OVERRIDE_KEY = "baptismInviteAdminOverride_v01";
 export const THEMES_KEY = "uzMapsSavedColorThemes_v04";
+
+export type ThemeOverrideScope = "guest" | "admin";
+
+function overrideKeyFor(scope: ThemeOverrideScope): string {
+  return scope === "admin" ? ADMIN_OVERRIDE_KEY : GUEST_OVERRIDE_KEY;
+}
 
 export const CANONICAL: Record<ThemeMode, ColorPair> = {
   /* Theme-flow pair: bg + interactive accent. Body ink stays neutral via deriveTokens. */
@@ -1886,10 +1896,17 @@ export function clearDerivedTokens(): void {
   }
 }
 
-export function readSavedOverride(): ColorPair | null {
+export function readSavedOverride(scope: ThemeOverrideScope = "guest"): ColorPair | null {
   try {
+    const scopedRaw = localStorage.getItem(overrideKeyFor(scope));
+    if (scopedRaw) return parseStoredOverride(scopedRaw, Boolean(scopedRaw));
+
+    /* Legacy shared key only migrates into the guest bucket so admin never
+       inherits a simple-user pick from the same browser. */
+    if (scope !== "guest") return null;
+
     const hasV11 = localStorage.getItem(OVERRIDE_KEY);
-    const raw =
+    const legacyRaw =
       hasV11 ??
       localStorage.getItem("uzMapsColorOverride_v10") ??
       localStorage.getItem("uzMapsColorOverride_v09") ??
@@ -1898,15 +1915,35 @@ export function readSavedOverride(): ColorPair | null {
       localStorage.getItem("uzMapsColorOverride_v06") ??
       localStorage.getItem("uzMapsColorOverride_v05") ??
       localStorage.getItem("uzMapsColorOverride_v04");
-    if (!raw) return null;
+    if (!legacyRaw) return null;
+
+    const parsed = parseStoredOverride(legacyRaw, Boolean(hasV11));
+    if (parsed) {
+      localStorage.setItem(GUEST_OVERRIDE_KEY, JSON.stringify(parsed));
+      localStorage.removeItem(OVERRIDE_KEY);
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function parseStoredOverride(raw: string, hasV11: boolean): ColorPair | null {
+  try {
     const parsed = JSON.parse(raw) as Partial<ColorPair>;
     const bg = normalizeHex(parsed.bg || "");
     const fg = normalizeHex(parsed.fg || "");
     const neutral = normalizeHex(parsed.neutral || "");
     const neutralSeed = normalizeHex(String(parsed.neutralSeed || ""));
     const primarySeed = normalizeHex(String(parsed.primarySeed || ""));
-    const kind = parsed.kind === "multicolor" ? "multicolor" : parsed.kind === "monochrome" ? "monochrome" : undefined;
-    const shell = parsed.shell === "dark" ? "dark" : parsed.shell === "light" ? "light" : undefined;
+    const kind =
+      parsed.kind === "multicolor"
+        ? "multicolor"
+        : parsed.kind === "monochrome"
+          ? "monochrome"
+          : undefined;
+    const shell =
+      parsed.shell === "dark" ? "dark" : parsed.shell === "light" ? "light" : undefined;
     const bgIndex = Number.isFinite(parsed.bgIndex) ? Number(parsed.bgIndex) : undefined;
     const fgIndex = Number.isFinite(parsed.fgIndex) ? Number(parsed.fgIndex) : undefined;
     const primaryIndex = Number.isFinite(parsed.primaryIndex)
@@ -1946,18 +1983,18 @@ export function readSavedOverride(): ColorPair | null {
   }
 }
 
-export function saveOverride(pair: ColorPair): void {
+export function saveOverride(pair: ColorPair, scope: ThemeOverrideScope = "guest"): void {
   try {
     const shell = resolveShell(pair);
-    localStorage.setItem(OVERRIDE_KEY, JSON.stringify({ ...pair, shell }));
+    localStorage.setItem(overrideKeyFor(scope), JSON.stringify({ ...pair, shell }));
   } catch {
     /* ignore quota */
   }
 }
 
-export function clearSavedOverride(): void {
+export function clearSavedOverride(scope: ThemeOverrideScope = "guest"): void {
   try {
-    localStorage.removeItem(OVERRIDE_KEY);
+    localStorage.removeItem(overrideKeyFor(scope));
   } catch {
     /* ignore */
   }
@@ -2102,7 +2139,8 @@ export function readCanonicalFromTheme(mode: ThemeMode): ColorPair {
 export function applyThemeChoice(
   wantTheme: ThemeMode,
   current: ColorPair,
-  fromShell: ThemeMode
+  fromShell: ThemeMode,
+  scope: ThemeOverrideScope = "guest"
 ): ColorPair {
   const settings = settingsFromPair(current, fromShell);
   const fromSequences = buildMonochromeSequences(settings.neutralSeed, fromShell);
@@ -2178,7 +2216,7 @@ export function applyThemeChoice(
     contrastByShell,
     ...(settings.kind === "multicolor" ? { primaryByShell } : {}),
   };
-  saveOverride(pair);
+  saveOverride(pair, scope);
   applyDerivedTokens(pair.bg, pair.fg, pair.neutral, pair.kind, {
     neutralSeed: pair.neutralSeed,
     primarySeed: pair.primarySeed,
@@ -2187,10 +2225,24 @@ export function applyThemeChoice(
   return pair;
 }
 
-/** Boot: restore persisted override before first paint of React tree. */
+/** Boot: restore the right scope before first paint (admin token/session ≠ guest). */
 export function bootColorOverride(): ColorPair | null {
-  const saved = readSavedOverride();
-  if (!saved) return null;
+  let adminLikely = false;
+  try {
+    adminLikely =
+      new URLSearchParams(window.location.search).has("admin") ||
+      Boolean(sessionStorage.getItem("baptismInviteAdminToken"));
+  } catch {
+    adminLikely = false;
+  }
+
+  const scope: ThemeOverrideScope = adminLikely ? "admin" : "guest";
+  const saved = readSavedOverride(scope);
+  if (!saved) {
+    /* Admin must not inherit guest CSS from a previous simple-user visit. */
+    if (adminLikely) clearDerivedTokens();
+    return null;
+  }
   const shell = resolveShell(saved);
   const resolved = pairFromSettings(settingsFromPair(saved, shell), shell);
   applyDerivedTokens(resolved.bg, resolved.fg, resolved.neutral, resolved.kind, {
