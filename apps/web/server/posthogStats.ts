@@ -54,20 +54,28 @@ export async function loadStatsFromPostHog(days = 30): Promise<Stats> {
       "baptism: invite opens"
     ),
     hogql(
-      `select properties.paletteId as id, count() as n from events
-       where event = 'palette_selected' and timestamp >= ${since} and id != ''
-       group by id order by n desc`,
+      `select properties['paletteId'] as palette_id, count() as n from events
+       where event = 'palette_selected'
+         and timestamp >= ${since}
+         and properties['paletteId'] is not null
+         and properties['paletteId'] != ''
+       group by palette_id order by n desc`,
       "baptism: palette picks by id"
     ),
     hogql(
-      `select properties.shell as shell, count() as n from events
-       where event = 'palette_selected' and timestamp >= ${since} and shell in ('light','dark')
+      `select properties['shell'] as shell, count() as n from events
+       where event = 'palette_selected'
+         and timestamp >= ${since}
+         and properties['shell'] in ('light', 'dark')
        group by shell`,
       "baptism: light vs dark"
     ),
     hogql(
-      `select properties.stop as stop, count() as n from events
-       where event = 'map_link_clicked' and timestamp >= ${since} and stop != ''
+      `select properties['stop'] as stop, count() as n from events
+       where event = 'map_link_clicked'
+         and timestamp >= ${since}
+         and properties['stop'] is not null
+         and properties['stop'] != ''
        group by stop order by n desc`,
       "baptism: navigation clicks by stop"
     ),

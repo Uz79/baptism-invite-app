@@ -372,7 +372,7 @@ export function ThemeContrastChecker({
   onRegisterConfirm,
 }: ThemeContrastCheckerProps) {
   const [settings, setSettings] = useState<ThemeSettings>(() => {
-    const saved = readSavedOverride();
+    const saved = readSavedOverride("admin");
     const base = saved ?? readCanonicalFromTheme(theme);
     return settingsFromPair(base, theme);
   });
@@ -392,7 +392,7 @@ export function ThemeContrastChecker({
   }, []);
 
   const syncFromLive = useCallback(() => {
-    const saved = readSavedOverride();
+    const saved = readSavedOverride("admin");
     const base = saved ?? readCanonicalFromTheme(theme);
     const nextSettings = settingsFromPair(base, theme);
     setSettings(nextSettings);
@@ -418,7 +418,7 @@ export function ThemeContrastChecker({
           rememberActivePalette(remembered);
           return;
         }
-        const saved = readSavedOverride();
+        const saved = readSavedOverride("admin");
         if (!saved) return;
         const live = settingsFromPair(saved, theme);
         const match = list.find((t) => {
@@ -450,7 +450,7 @@ export function ThemeContrastChecker({
         throw new Error("Wybierz paletę przed potwierdzeniem.");
       }
       const pair = pairFromSettings(settings, theme);
-      saveOverride({ ...pair, shell: theme });
+      saveOverride({ ...pair, shell: theme }, "admin");
       await publishActiveTheme(id, theme);
       rememberActivePalette(id);
     });
@@ -490,7 +490,7 @@ export function ThemeContrastChecker({
   );
 
   const storedThemeState = useMemo(() => {
-    const saved = readSavedOverride();
+    const saved = readSavedOverride("admin");
     if (!saved) return undefined;
     return {
       contrastByShell: saved.contrastByShell,
@@ -553,7 +553,7 @@ export function ThemeContrastChecker({
         fgIndex: clampSequenceIndex(next.fgIndex, fgLen),
         primaryIndex: clampSequenceIndex(next.primaryIndex, primaryLen),
       };
-      const live = readSavedOverride();
+      const live = readSavedOverride("admin");
       const clampedPair = withShellThemeState(
         {
           ...pairFromSettings(clamped, theme),
@@ -572,7 +572,7 @@ export function ThemeContrastChecker({
         neutralSeed: clampedPair.neutralSeed,
         primarySeed: clampedPair.primarySeed,
       });
-      if (persist) saveOverride({ ...clampedPair, shell: theme });
+      if (persist) saveOverride({ ...clampedPair, shell: theme }, "admin");
       if (syncShell) {
         /* Shell is only changed by Jasne/Ciemne — never infer from luminance. */
         document.documentElement.dataset.theme = theme;
@@ -606,7 +606,7 @@ export function ThemeContrastChecker({
   };
 
   const reset = () => {
-    clearSavedOverride();
+    clearSavedOverride("admin");
     commitSettings(canonicalThemeSettings(theme), { persist: false, syncShell: false });
   };
 
@@ -620,7 +620,7 @@ export function ThemeContrastChecker({
     setPaletteError(null);
     try {
       const derived = pairFromSettings(settings, theme);
-      const live = readSavedOverride();
+      const live = readSavedOverride("admin");
       const themeCard: SavedTheme = {
         id: makeThemeId(),
         name: nextThemeName(savedThemes, settings.kind),
