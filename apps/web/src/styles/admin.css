@@ -7,15 +7,16 @@
      menu     baptism-invite-v01_admin-menu-01/02_mobile_light-theme    375x812
 
    Every surface is white — sidebar, main region and cards alike. Cards are
-   separated by a 1px #3b3d42 border at 20% opacity, radius 8. The earlier
-   navy (#00157E) is gone: ink, bars and headings are all the neutral #3b3d42.
+   separated by a 1px stroke at 20% of --color-fg (track at 12%), radius 8.
+   Both adapt with light/dark shell; do not hardcode a light-only grey.
    ───────────────────────────────────────────────────────────── */
 
 .admin-app {
-  --admin-line: rgba(59, 61, 66, 0.2);
+  /* Theme-aware: hardcoded #3b3d42 alphas vanish on dark shells. */
+  --admin-line: color-mix(in srgb, var(--color-fg) 20%, transparent);
   --admin-radius: 0.5rem;
   --chart-ink: var(--color-fg);      /* bars, values, headings */
-  --chart-track: rgba(59, 61, 66, 0.12);
+  --chart-track: color-mix(in srgb, var(--color-fg) 12%, transparent);
   --chart-multi: #f7b900;
   --chart-light: #bd004f;
   --chart-dark: #41b900;
