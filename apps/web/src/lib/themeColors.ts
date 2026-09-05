@@ -59,6 +59,8 @@ export type ColorPair = {
   fg: string;
   /** Neutral body ink (Theme flow “Neutral color”); falls back to canonical body */
   neutral?: string;
+  /** Explicit Light/Dark shell — preferred over luminance inference on boot. */
+  shell?: ThemeMode;
   /** v2 theme-flow: sequence indices + seeds (persisted with override). */
   kind?: ThemeKind;
   neutralSeed?: string;
@@ -480,6 +482,12 @@ export function shellThemeFromPair(bgHex: string, fgHex: string): ThemeMode {
   const fg = hexToRgb(fgHex);
   if (!bg || !fg) return "dark";
   return relLuminance(bg) < relLuminance(fg) ? "dark" : "light";
+}
+
+/** Prefer an explicit saved shell; fall back to bg/fg luminance. */
+export function resolveShell(pair: Pick<ColorPair, "bg" | "fg" | "shell">): ThemeMode {
+  if (pair.shell === "light" || pair.shell === "dark") return pair.shell;
+  return shellThemeFromPair(pair.bg, pair.fg);
 }
 
 export function wcagFromRatio(ratio: number): WcagChecks {
@@ -1594,6 +1602,7 @@ export function pairFromSettings(settings: ThemeSettings, shell: ThemeMode): Col
       bg,
       fg: fgStep,
       neutral: fgStep,
+      shell,
       kind: settings.kind,
       neutralSeed,
       primarySeed,
@@ -1619,6 +1628,7 @@ export function pairFromSettings(settings: ThemeSettings, shell: ThemeMode): Col
     bg,
     fg,
     neutral: fgStep,
+    shell,
     kind: settings.kind,
     neutralSeed,
     primarySeed,
@@ -1896,13 +1906,14 @@ export function readSavedOverride(): ColorPair | null {
     const neutralSeed = normalizeHex(String(parsed.neutralSeed || ""));
     const primarySeed = normalizeHex(String(parsed.primarySeed || ""));
     const kind = parsed.kind === "multicolor" ? "multicolor" : parsed.kind === "monochrome" ? "monochrome" : undefined;
+    const shell = parsed.shell === "dark" ? "dark" : parsed.shell === "light" ? "light" : undefined;
     const bgIndex = Number.isFinite(parsed.bgIndex) ? Number(parsed.bgIndex) : undefined;
     const fgIndex = Number.isFinite(parsed.fgIndex) ? Number(parsed.fgIndex) : undefined;
     const primaryIndex = Number.isFinite(parsed.primaryIndex)
       ? Number(parsed.primaryIndex)
       : undefined;
     if (!bg || !fg) return null;
-    const inferredShell = shellThemeFromPair(bg, fg);
+    const inferredShell = shell ?? shellThemeFromPair(bg, fg);
     const contrastByShell = parseContrastByShell(
       parsed.contrastByShell,
       inferredShell,
@@ -1917,6 +1928,7 @@ export function readSavedOverride(): ColorPair | null {
       {
         bg,
         fg,
+        shell: inferredShell,
         ...(neutral ? { neutral } : {}),
         ...(kind ? { kind } : {}),
         ...(neutralSeed ? { neutralSeed } : {}),
@@ -1936,7 +1948,8 @@ export function readSavedOverride(): ColorPair | null {
 
 export function saveOverride(pair: ColorPair): void {
   try {
-    localStorage.setItem(OVERRIDE_KEY, JSON.stringify(pair));
+    const shell = resolveShell(pair);
+    localStorage.setItem(OVERRIDE_KEY, JSON.stringify({ ...pair, shell }));
   } catch {
     /* ignore quota */
   }
@@ -2161,6 +2174,7 @@ export function applyThemeChoice(
       fgIndex,
       ...(settings.kind === "multicolor" ? { primaryIndex: nextSettings.primaryIndex } : {}),
     }),
+    shell: wantTheme,
     contrastByShell,
     ...(settings.kind === "multicolor" ? { primaryByShell } : {}),
   };
@@ -2177,12 +2191,12 @@ export function applyThemeChoice(
 export function bootColorOverride(): ColorPair | null {
   const saved = readSavedOverride();
   if (!saved) return null;
-  const shell = shellThemeFromPair(saved.bg, saved.fg);
+  const shell = resolveShell(saved);
   const resolved = pairFromSettings(settingsFromPair(saved, shell), shell);
   applyDerivedTokens(resolved.bg, resolved.fg, resolved.neutral, resolved.kind, {
     neutralSeed: saved.neutralSeed ?? resolved.neutralSeed,
     primarySeed: saved.primarySeed ?? resolved.primarySeed,
   });
   document.documentElement.dataset.theme = shell;
-  return { ...saved, ...resolved };
+  return { ...saved, ...resolved, shell };
 }

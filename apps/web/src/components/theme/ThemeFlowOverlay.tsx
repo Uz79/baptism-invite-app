@@ -9,7 +9,7 @@ interface ThemeFlowOverlayProps {
   theme?: Theme;
   onThemeChange?: (theme: Theme) => void;
   onClose: () => void;
-  onConfirm?: () => void;
+  onConfirm?: () => void | Promise<void>;
   confirmLabel?: string;
   confirmDisabled?: boolean;
   showShellToggle?: boolean;
@@ -151,8 +151,13 @@ export function ThemeFlowOverlay({
 
   const handleConfirm = () => {
     if (confirmDisabled) return;
-    onConfirm?.();
-    onClose();
+    void Promise.resolve(onConfirm?.())
+      .then(() => {
+        onClose();
+      })
+      .catch(() => {
+        /* Caller surfaces the error; keep the sheet open. */
+      });
   };
 
   return (

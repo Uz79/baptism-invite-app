@@ -147,5 +147,58 @@
     "fgIndex": 8,
     "primaryIndex": 6,
     "createdAt": 6
+  },
+  {
+    "id": "t_9fed14c8d0cdd_1a070eac97b",
+    "name": "multi G",
+    "bg": "#414e42",
+    "fg": "#7a907c",
+    "neutral": "#eaeeeb",
+    "shell": "dark",
+    "kind": "multicolor",
+    "neutralSeed": "#576959",
+    "primarySeed": "#576959",
+    "bgIndex": 6,
+    "fgIndex": 4,
+    "primaryIndex": 6,
+    "contrastByShell": {
+      "light": {
+        "bgIndex": 0,
+        "fgIndex": 8
+      },
+      "dark": {
+        "bgIndex": 6,
+        "fgIndex": 4
+      }
+    },
+    "primaryByShell": {
+      "light": 6,
+      "dark": 6
+    },
+    "createdAt": 1788600830331
+  },
+  {
+    "id": "t_c13b4cc6638c9_1a070eb2481",
+    "name": "mono D",
+    "bg": "#ffffff",
+    "fg": "#7a907c",
+    "neutral": "#7a907c",
+    "shell": "light",
+    "kind": "monochrome",
+    "neutralSeed": "#576959",
+    "primarySeed": "#576959",
+    "bgIndex": 0,
+    "fgIndex": 6,
+    "primaryIndex": 6,
+    "contrastByShell": {
+      "light": {
+        "bgIndex": 0,
+        "fgIndex": 6
+      }
+    },
+    "primaryByShell": {
+      "light": 6
+    },
+    "createdAt": 1788600853633
   }
 ]
