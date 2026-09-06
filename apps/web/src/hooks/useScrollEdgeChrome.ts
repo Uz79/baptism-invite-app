@@ -36,7 +36,15 @@ export function useScrollEdgeChrome(
       if (!footer) return false;
       const cs = window.getComputedStyle(footer);
       if (cs.display === "none" || cs.visibility === "hidden") return false;
-      if (cs.position === "fixed" || cs.position === "sticky") return true;
+      /* Absolute/fixed/sticky overlays are intentional edge markers (admin
+         scrollport) — don't require offsetParent. */
+      if (
+        cs.position === "fixed" ||
+        cs.position === "sticky" ||
+        cs.position === "absolute"
+      ) {
+        return true;
+      }
       return footer.offsetParent !== null;
     };
 
@@ -86,10 +94,15 @@ export function useScrollEdgeChrome(
       const maxScroll = boundScrollEl.scrollHeight - boundScrollEl.clientHeight;
       const overflows = maxScroll > 1;
       const atBottom = maxScroll <= 1 || scrollTop >= maxScroll - 1;
+      const moreBelow = overflows && !atBottom;
 
       nav?.classList.toggle("is-scroll-edge--after", isNavAtScrollEdge());
+      /* Prefer a dedicated footer chrome when present; also mark the scroll
+         element so inset bottom indication can paint inside the scrollport
+         (admin statistics has no real footer bar). */
+      boundScrollEl.classList.toggle("is-scroll-edge--before", moreBelow);
       if (footer && isFooterVisible()) {
-        footer.classList.toggle("is-scroll-edge--before", overflows && !atBottom);
+        footer.classList.toggle("is-scroll-edge--before", moreBelow);
       } else {
         footer?.classList.remove("is-scroll-edge--before");
       }
@@ -105,7 +118,10 @@ export function useScrollEdgeChrome(
     requestAnimationFrame(update);
 
     return () => {
-      if (boundScrollEl) boundScrollEl.removeEventListener("scroll", update);
+      if (boundScrollEl) {
+        boundScrollEl.removeEventListener("scroll", update);
+        boundScrollEl.classList.remove("is-scroll-edge--before");
+      }
       if (contentObserver && boundContentEl) contentObserver.unobserve(boundContentEl);
       rootObserver?.disconnect();
       nav?.classList.remove("is-scroll-edge--after");

@@ -155,12 +155,6 @@ export function AdminShell({ children, title, onThemeOpen, theme, onThemeChange 
               {children}
             </div>
           </main>
-          {/* Zero-height edge for upward content-indication shadow (more below). */}
-          <div
-            className="admin-scrollport__edge"
-            data-scroll-edge-footer
-            aria-hidden
-          />
         </div>
       </div>
 
