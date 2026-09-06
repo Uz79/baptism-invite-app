@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { SegmentedControl } from "@cartography-lab/ui";
 import type { Theme } from "../../types/theme";
 import { useSlideUpOverlay } from "../../hooks/useSlideUpOverlay";
+import { useStickyBarScrollEdge } from "../../hooks/useStickyBarScrollEdge";
 
 /**
  * Admin chrome. Desktop (>=1024px) renders a persistent 256px sidebar;
@@ -54,6 +55,9 @@ export function AdminShell({ children, title, onThemeOpen, theme, onThemeChange 
   const [menuOpen, setMenuOpen] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
   const shellRef = useRef<HTMLDivElement>(null);
+  const topbarRef = useRef<HTMLElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
+  useStickyBarScrollEdge(topbarRef, mainRef);
 
   /* Same slide-up choreography as the settings flow. */
   useSlideUpOverlay({ open: menuOpen, overlayRef, shellRef });
@@ -131,7 +135,7 @@ export function AdminShell({ children, title, onThemeOpen, theme, onThemeChange 
 
       <div className="admin-body">
         {/* Mobile top bar */}
-        <header className="admin-topbar">
+        <header ref={topbarRef} className="admin-topbar" data-scroll-edge-nav>
           <button
             className="admin-topbar__menu"
             type="button"
@@ -145,7 +149,7 @@ export function AdminShell({ children, title, onThemeOpen, theme, onThemeChange 
           <span className="admin-topbar__spacer" aria-hidden />
         </header>
 
-        <main className="admin-main">
+        <main ref={mainRef} className="admin-main">
           <div className="admin-main__inner">{children}</div>
         </main>
       </div>
