@@ -182,6 +182,15 @@
 
 /* ── Main region ─────────────────────────────────────── */
 
+.admin-scrollport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .admin-main {
   position: relative;
   z-index: 0;
@@ -199,6 +208,23 @@
   margin: 0 auto;
   padding: 0 var(--space-3) var(--space-5);
   box-sizing: border-box;
+}
+
+/* Pins to the bottom of the scrollport; shadow casts upward when more content
+   sits below the fold (driven by useScrollEdgeChrome). */
+.admin-scrollport__edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  z-index: 10;
+  pointer-events: none;
+  transition: box-shadow 0.15s ease;
+}
+
+.admin-scrollport__edge.is-scroll-edge--before {
+  box-shadow: var(--shadow-content-indication-before);
 }
 
 /* ── Desktop breakpoint ──────────────────────────────── */

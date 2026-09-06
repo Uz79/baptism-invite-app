@@ -149,11 +149,19 @@ export function AdminShell({ children, title, onThemeOpen, theme, onThemeChange 
           <span className="admin-topbar__spacer" aria-hidden />
         </header>
 
-        <main className="admin-main" data-scroll-edge>
-          <div className="admin-main__inner" data-scroll-edge-content>
-            {children}
-          </div>
-        </main>
+        <div className="admin-scrollport">
+          <main className="admin-main" data-scroll-edge>
+            <div className="admin-main__inner" data-scroll-edge-content>
+              {children}
+            </div>
+          </main>
+          {/* Zero-height edge for upward content-indication shadow (more below). */}
+          <div
+            className="admin-scrollport__edge"
+            data-scroll-edge-footer
+            aria-hidden
+          />
+        </div>
       </div>
 
       {/* Mobile menu sheet — admin-menu-01 / 02.
