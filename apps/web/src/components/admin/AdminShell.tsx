@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { SegmentedControl } from "@cartography-lab/ui";
 import type { Theme } from "../../types/theme";
 import { useSlideUpOverlay } from "../../hooks/useSlideUpOverlay";
-import { useStickyBarScrollEdge } from "../../hooks/useStickyBarScrollEdge";
+import { useScrollEdgeChrome } from "../../hooks/useScrollEdgeChrome";
 
 /**
  * Admin chrome. Desktop (>=1024px) renders a persistent 256px sidebar;
@@ -55,12 +55,12 @@ export function AdminShell({ children, title, onThemeOpen, theme, onThemeChange 
   const [menuOpen, setMenuOpen] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
   const shellRef = useRef<HTMLDivElement>(null);
-  const topbarRef = useRef<HTMLElement>(null);
-  const mainRef = useRef<HTMLElement>(null);
-  useStickyBarScrollEdge(topbarRef, mainRef);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   /* Same slide-up choreography as the settings flow. */
   useSlideUpOverlay({ open: menuOpen, overlayRef, shellRef });
+  /* Same banking scroll-edge shadow as guest chrome / theme flow. */
+  useScrollEdgeChrome(bodyRef, true);
 
   /* Close the sheet on route change and on Escape. */
   useEffect(() => setMenuOpen(false), [pathname]);
@@ -133,9 +133,9 @@ export function AdminShell({ children, title, onThemeOpen, theme, onThemeChange 
         {themeToggle}
       </aside>
 
-      <div className="admin-body">
+      <div className="admin-body" ref={bodyRef}>
         {/* Mobile top bar */}
-        <header ref={topbarRef} className="admin-topbar" data-scroll-edge-nav>
+        <header className="admin-topbar" data-scroll-edge-nav>
           <button
             className="admin-topbar__menu"
             type="button"
@@ -149,8 +149,10 @@ export function AdminShell({ children, title, onThemeOpen, theme, onThemeChange 
           <span className="admin-topbar__spacer" aria-hidden />
         </header>
 
-        <main ref={mainRef} className="admin-main">
-          <div className="admin-main__inner">{children}</div>
+        <main className="admin-main" data-scroll-edge>
+          <div className="admin-main__inner" data-scroll-edge-content>
+            {children}
+          </div>
         </main>
       </div>
 
