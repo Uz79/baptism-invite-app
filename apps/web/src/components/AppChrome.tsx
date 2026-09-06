@@ -1,6 +1,7 @@
-import { useEffect, useRef, type ReactNode, type RefObject } from "react";
+import { useRef, type ReactNode } from "react";
 import { IconButton } from "@cartography-lab/ui";
 import { usePostHog } from "@posthog/react";
+import { useStickyBarScrollEdge } from "../hooks/useStickyBarScrollEdge";
 
 type AppChromeProps = {
   title: string;
@@ -19,39 +20,6 @@ function MenuIcon() {
       />
     </svg>
   );
-}
-
-/**
- * Banking-style content indication: shadow under the sticky bar once page
- * content scrolls beneath it.
- */
-function useStickyBarScrollEdge(barRef: RefObject<HTMLElement | null>) {
-  useEffect(() => {
-    const bar = barRef.current;
-    if (!bar) return;
-
-    const update = () => {
-      const overflows = document.documentElement.scrollHeight - window.innerHeight > 1;
-      const scrolled = window.scrollY > 1;
-      bar.classList.toggle("is-scroll-edge--after", overflows && scrolled);
-    };
-
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    const ro =
-      typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
-    ro?.observe(document.documentElement);
-
-    update();
-    requestAnimationFrame(update);
-
-    return () => {
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-      ro?.disconnect();
-      bar.classList.remove("is-scroll-edge--after");
-    };
-  }, [barRef]);
 }
 
 export function AppChrome({ title, onThemeOpen, children }: AppChromeProps) {
