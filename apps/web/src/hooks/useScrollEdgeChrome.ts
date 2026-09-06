@@ -97,10 +97,6 @@ export function useScrollEdgeChrome(
       const moreBelow = overflows && !atBottom;
 
       nav?.classList.toggle("is-scroll-edge--after", isNavAtScrollEdge());
-      /* Prefer a dedicated footer chrome when present; also mark the scroll
-         element so inset bottom indication can paint inside the scrollport
-         (admin statistics has no real footer bar). */
-      boundScrollEl.classList.toggle("is-scroll-edge--before", moreBelow);
       if (footer && isFooterVisible()) {
         footer.classList.toggle("is-scroll-edge--before", moreBelow);
       } else {
@@ -118,10 +114,7 @@ export function useScrollEdgeChrome(
     requestAnimationFrame(update);
 
     return () => {
-      if (boundScrollEl) {
-        boundScrollEl.removeEventListener("scroll", update);
-        boundScrollEl.classList.remove("is-scroll-edge--before");
-      }
+      if (boundScrollEl) boundScrollEl.removeEventListener("scroll", update);
       if (contentObserver && boundContentEl) contentObserver.unobserve(boundContentEl);
       rootObserver?.disconnect();
       nav?.classList.remove("is-scroll-edge--after");

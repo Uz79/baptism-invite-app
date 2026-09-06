@@ -201,12 +201,6 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   background-color: var(--color-bg);
-  transition: box-shadow 0.15s ease;
-}
-
-/* Inset so the bottom cue paints inside the scrollport (same strength as top). */
-.admin-main.is-scroll-edge--before {
-  box-shadow: var(--shadow-content-indication-before-inset);
 }
 
 .admin-main__inner {
@@ -214,6 +208,35 @@
   margin: 0 auto;
   padding: 0 var(--space-3) var(--space-5);
   box-sizing: border-box;
+}
+
+/*
+ * Bottom content indication — overlay at the scrollport floor (not an inset
+ * on .admin-main; inset without negative spread lit the TOP edge whenever
+ * more content remained below). Same soft fade language as the top bar.
+ */
+.admin-scrollport__edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2rem;
+  z-index: 20;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--color-overlay-tint) 22%, transparent),
+    transparent
+  );
+}
+
+.admin-scrollport__edge[data-scroll-edge-footer].is-scroll-edge--before {
+  opacity: 1;
+  /* theme-flow applies an outer box-shadow on [data-scroll-edge-footer];
+     this marker uses the gradient instead. */
+  box-shadow: none;
 }
 
 /* ── Desktop breakpoint ──────────────────────────────── */

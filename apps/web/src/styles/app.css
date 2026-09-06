@@ -28,9 +28,6 @@ body {
     color-mix(in srgb, var(--color-overlay-tint) 10%, transparent);
   --shadow-content-indication-before: 0 -0.125rem 2rem
     color-mix(in srgb, var(--color-overlay-tint) 10%, transparent);
-  /* Inside a scrollport (no footer chrome) — positive Y = bottom edge. */
-  --shadow-content-indication-before-inset: inset 0 0.125rem 2rem
-    color-mix(in srgb, var(--color-overlay-tint) 10%, transparent);
   --panel-drop-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
@@ -38,8 +35,6 @@ html[data-theme="dark"] {
   --shadow-content-indication-after: 0 0.125rem 1rem
     color-mix(in srgb, var(--color-overlay-tint) 25%, transparent);
   --shadow-content-indication-before: 0 -0.125rem 1rem
-    color-mix(in srgb, var(--color-overlay-tint) 25%, transparent);
-  --shadow-content-indication-before-inset: inset 0 0.125rem 1rem
     color-mix(in srgb, var(--color-overlay-tint) 25%, transparent);
   --panel-drop-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
 }

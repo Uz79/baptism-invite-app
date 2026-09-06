@@ -155,6 +155,11 @@ export function AdminShell({ children, title, onThemeOpen, theme, onThemeChange 
               {children}
             </div>
           </main>
+          <div
+            className="admin-scrollport__edge"
+            data-scroll-edge-footer
+            aria-hidden
+          />
         </div>
       </div>
 
