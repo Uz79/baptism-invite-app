@@ -8,17 +8,13 @@ import {
   type StatsResult,
   type StatsSource,
 } from "../lib/statsApi";
+import { mergeNavCounts } from "../lib/navStats";
 import {
   pairFromSettings,
   settingsFromPair,
   type SavedTheme,
   type ThemeMode,
 } from "../lib/themeColors";
-
-const NAV_LABELS: Record<string, string> = {
-  church: "Church",
-  restaurant: "Restaurant",
-};
 
 type Row = { id: string; name: string; kind: string; count: number; swatches: string[] };
 
@@ -132,9 +128,9 @@ export function StatisticsPage() {
 
   const totalPicks = rows.reduce((s, r) => s + r.count, 0);
   const maxPick = Math.max(1, ...rows.map((r) => r.count));
-  const navEntries = Object.entries(stats.nav).sort((a, b) => b[1] - a[1]);
-  const navTotal = navEntries.reduce((s, [, v]) => s + v, 0);
-  const maxNav = Math.max(1, ...navEntries.map(([, v]) => v));
+  const navRows = useMemo(() => mergeNavCounts(stats.nav), [stats.nav]);
+  const navTotal = navRows.reduce((s, r) => s + r.count, 0);
+  const maxNav = Math.max(1, ...navRows.map((r) => r.count));
   const monoCount = rows.filter((r) => r.kind === "monochrome").reduce((s, r) => s + r.count, 0);
   const multiCount = totalPicks - monoCount;
 
@@ -160,7 +156,7 @@ export function StatisticsPage() {
       <div className="stack-stats">
         <StatCard label="Invites open" value={stats.opens} note="Individual openings" />
         <StatCard label="Chosen palettes" value={totalPicks} note="Guest Potwierdź only" />
-        <StatCard label="Clicked navigation" value={navTotal} note="Church and restaurant" />
+        <StatCard label="Clicked navigation" value={navTotal} note="Church and restaurant stops" />
         <StatCard
           label="Guests without changes"
           value={Math.max(0, stats.opens - totalPicks)}
@@ -218,17 +214,20 @@ export function StatisticsPage() {
           <section className="panel">
             <h2 className="panel__title">Used navigation</h2>
             <p className="panel__note">{navTotal} clicks</p>
-            {navEntries.length === 0 ? (
+            {navRows.length === 0 ? (
               <p className="panel__empty">No clicks yet.</p>
             ) : (
               <ul className="navstats">
-                {navEntries.map(([stop, value]) => (
-                  <li className="navstats__row" key={stop}>
-                    <span className="navstats__label">{NAV_LABELS[stop] ?? stop}</span>
+                {navRows.map((row) => (
+                  <li className="navstats__row" key={row.key}>
+                    <span className="navstats__label">{row.label}</span>
                     <span className="navstats__track">
-                      <span className="navstats__bar" style={{ width: `${(value / maxNav) * 100}%` }} />
+                      <span
+                        className="navstats__bar"
+                        style={{ width: `${(row.count / maxNav) * 100}%` }}
+                      />
                     </span>
-                    <span className="navstats__value">{value}</span>
+                    <span className="navstats__value">{row.count}</span>
                   </li>
                 ))}
               </ul>
